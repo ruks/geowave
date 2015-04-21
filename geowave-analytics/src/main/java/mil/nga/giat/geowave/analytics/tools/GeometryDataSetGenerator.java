@@ -25,11 +25,12 @@ import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.slf4j.Logger;
@@ -38,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Point;
 
 /**
  * Generate clusters of geometries.
@@ -225,6 +228,20 @@ public class GeometryDataSetGenerator
 	}
 
 	public List<SimpleFeature> generatePointSet(
+			final LineString line,
+			final double distanceFactor,
+			final int points ) {
+		final List<SimpleFeature> pointSet = new ArrayList<SimpleFeature>();
+		for (Point point : CurvedDensityDataGeneratorTool.generatePoints(
+				line,
+				distanceFactor,
+				points)) {
+			pointSet.add(createFeatureWithGeometry(point));
+		}
+		return pointSet;
+	}
+
+	public List<SimpleFeature> generatePointSet(
 			final double minCenterDistanceFactor,
 			final double outlierFactor,
 			final int numberOfCenters,
@@ -327,8 +344,7 @@ public class GeometryDataSetGenerator
 	}
 
 	private void init() {
-		final GeometryDescriptor geoDescriptor = builder.getFeatureType().getGeometryDescriptor();
-		coordSystem = geoDescriptor.getType().getCoordinateReferenceSystem().getCoordinateSystem();
+		coordSystem = builder.getFeatureType().getCoordinateReferenceSystem().getCoordinateSystem();
 
 		minAxis = new double[coordSystem.getDimension()];
 		maxAxis = new double[coordSystem.getDimension()];
@@ -444,6 +460,10 @@ public class GeometryDataSetGenerator
 		}
 	}
 
+	public GeometryFactory getFactory() {
+		return geoFactory;
+	}
+
 	/**
 	 * Change the constrain min and max to center around the coordinate to keep
 	 * the polygons tight.
@@ -491,7 +511,7 @@ public class GeometryDataSetGenerator
 
 	public static void main(
 			final String args[] )
-			throws IOException {
+			throws Exception {
 		final GeometryDataSetGenerator dataGenerator = new GeometryDataSetGenerator(
 				new FeatureCentroidDistanceFn(),
 				getBuilder(args[5]));
@@ -570,11 +590,14 @@ public class GeometryDataSetGenerator
 	}
 
 	private static SimpleFeatureBuilder getBuilder(
-			String name ) {
+			String name )
+			throws FactoryException {
 		final SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
 		typeBuilder.setName(name);
-		typeBuilder.setCRS(DefaultGeographicCRS.WGS84); // <- Coordinate
-														// reference
+		typeBuilder.setCRS(CRS.decode(
+				"EPSG:4326",
+				true)); // <- Coordinate
+						// reference
 		// add attributes in order
 		typeBuilder.add(
 				"geom",

@@ -11,6 +11,8 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.GeodeticCalculator;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -18,6 +20,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class GeometryCalculations
 {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(GeometryCalculations.class);
 
 	final GeometryFactory factory;
 	final CoordinateReferenceSystem crs;
@@ -54,10 +57,12 @@ public class GeometryCalculations
 			Coordinate coordinate ) {
 		List<Geometry> geos = new LinkedList<Geometry>();
 		GeodeticCalculator geoCalc = new GeodeticCalculator();
-		geoCalc.setStartingGeographicPoint(
-				coordinate.x,
-				coordinate.y);
+
 		try {
+			geoCalc.setStartingGeographicPoint(
+					coordinate.x,
+					coordinate.y);
+
 			geoCalc.setDirection(
 					0,
 					unit.getConverterTo(
@@ -98,13 +103,17 @@ public class GeometryCalculations
 					x2,
 					y1,
 					y2);
-			return geos;
 		}
 		catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error(
+					"Cannot calculate envelope for {} : {}",
+					coordinate.toString(),
+					ex.getMessage());
+			throw new IllegalArgumentException(
+					ex);
 		}
 
-		return null;
+		return geos;
 	}
 
 	private void handleBoundaries(

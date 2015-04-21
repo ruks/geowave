@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import mil.nga.giat.geowave.analytics.clustering.ClusteringUtils;
@@ -44,7 +45,25 @@ public class AdapterBasedPartitionerTest
 	}
 
 	@Test
-	public void test()
+	public void testTools() {
+		PropertyManagement pMt = new PropertyManagement();
+		final double[] distances = new double[] {
+			0.02,
+			0.35
+		};
+		AdapterBasedPartitioner.putDistances(
+				pMt,
+				distances);
+		final double[] copyOfDistances = AdapterBasedPartitioner.getDistances(
+				pMt,
+				getClass());
+		assertTrue(Arrays.equals(
+				distances,
+				copyOfDistances));
+	}
+
+	@Test
+	public void testPartion()
 			throws IOException {
 
 		final SimpleFeatureType ftype = AnalyticFeature.createGeometryFeatureAdapter(

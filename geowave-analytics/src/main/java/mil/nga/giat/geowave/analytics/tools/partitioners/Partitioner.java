@@ -12,6 +12,7 @@ import mil.nga.giat.geowave.analytics.tools.PropertyManagement;
 import mil.nga.giat.geowave.index.ByteArrayId;
 
 import org.apache.commons.cli.Option;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 
@@ -57,10 +58,20 @@ public interface Partitioner<T>
 		private static final long serialVersionUID = 1L;
 
 		private ByteArrayId id;
+		private ByteArrayId groupId = null;
 		private boolean isPrimary;
 
 		public ByteArrayId getId() {
 			return id;
+		}
+
+		public ByteArrayId getGroupId() {
+			return groupId;
+		}
+
+		public void setGroupId(
+				ByteArrayId groupId ) {
+			this.groupId = groupId;
 		}
 
 		public boolean isPrimary() {
@@ -70,17 +81,23 @@ public interface Partitioner<T>
 		public PartitionData() {}
 
 		public PartitionData(
-				ByteArrayId id,
-				boolean primary ) {
+				final ByteArrayId id,
+				final boolean primary ) {
 			super();
 			this.id = id;
 			this.isPrimary = primary;
 		}
 
 		@Override
+		public String toString() {
+			return "PartitionData [id=" + Hex.encodeHexString(id.getBytes()) + ", groupId=" + (groupId == null ? "null" : groupId.getString()) + ", isPrimary=" + isPrimary + "]";
+		}
+
+		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + ((groupId == null) ? 0 : groupId.hashCode());
 			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			return result;
 		}
@@ -92,6 +109,10 @@ public interface Partitioner<T>
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
 			PartitionData other = (PartitionData) obj;
+			if (groupId == null) {
+				if (other.groupId != null) return false;
+			}
+			else if (!groupId.equals(other.groupId)) return false;
 			if (id == null) {
 				if (other.id != null) return false;
 			}
@@ -101,23 +122,42 @@ public interface Partitioner<T>
 
 		@Override
 		public void readFields(
-				DataInput dInput )
+				final DataInput dInput )
 				throws IOException {
-			int idSize = dInput.readInt();
+			final int idSize = dInput.readInt();
 			final byte[] idBytes = new byte[idSize];
 			dInput.readFully(idBytes);
-			isPrimary = dInput.readBoolean();
 			id = new ByteArrayId(
 					idBytes);
+
+			final int groupIdSize = dInput.readInt();
+			if (groupIdSize > 0) {
+				final byte[] groupIdIdBytes = new byte[groupIdSize];
+				dInput.readFully(groupIdIdBytes);
+				groupId = new ByteArrayId(
+						groupIdIdBytes);
+			}
+
+			isPrimary = dInput.readBoolean();
 		}
 
 		@Override
 		public void write(
-				DataOutput dOutput )
+				final DataOutput dOutput )
 				throws IOException {
-			byte[] outputId = id.getBytes();
+			final byte[] outputId = id.getBytes();
 			dOutput.writeInt(outputId.length);
 			dOutput.write(outputId);
+
+			if (groupId != null) {
+				final byte[] groupOutputId = groupId.getBytes();
+				dOutput.writeInt(groupOutputId.length);
+				dOutput.write(groupOutputId);
+			}
+			else {
+				dOutput.writeInt(0);
+			}
+
 			dOutput.writeBoolean(isPrimary);
 
 		}

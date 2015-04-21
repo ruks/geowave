@@ -49,7 +49,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 public class NNMapReduceTest
 {
 
-	MapDriver<GeoWaveInputKey, SimpleFeature, PartitionDataWritable, AdapterWithObjectWritable> mapDriver;
+	MapDriver<GeoWaveInputKey, Object, PartitionDataWritable, AdapterWithObjectWritable> mapDriver;
 	ReduceDriver<PartitionDataWritable, AdapterWithObjectWritable, Text, Text> reduceDriver;
 	SimpleFeatureType ftype;
 	final GeometryFactory factory = new GeometryFactory();

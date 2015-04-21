@@ -9,13 +9,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Date;
 
+import mil.nga.giat.geowave.index.StringUtils;
+import mil.nga.giat.geowave.vector.plugin.GeoWaveGTDataStore;
+
 import org.apache.hadoop.io.Writable;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystem;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
@@ -32,6 +38,10 @@ public class FeatureWritable implements
 		Writable,
 		java.io.Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1772905453103965064L;
 	private SimpleFeatureType featureType;
 	private SimpleFeature feature;
 
@@ -67,6 +77,21 @@ public class FeatureWritable implements
 			featureType = DataUtilities.createType(
 					typeName,
 					input.readUTF());
+
+			String axis = input.readUTF();
+			final CoordinateReferenceSystem crs = featureType.getCoordinateReferenceSystem();
+			// Default for EPSG:4326 is lat/long, If the provided type was
+			// long/lat, then re-establish the order
+			if (crs != null && crs.getIdentifiers().toString().contains(
+					"EPSG:4326") && axis.toLowerCase().contains(
+					"east")) {
+				SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+				builder.init(featureType);
+
+				featureType = SimpleFeatureTypeBuilder.retype(
+						featureType,
+						GeoWaveGTDataStore.DEFAULT_CRS);
+			}
 		}
 		catch (final SchemaException e) {
 			throw new IOException(
@@ -89,12 +114,22 @@ public class FeatureWritable implements
 		feature = builder.buildFeature(fid);
 	}
 
+	private String getAxis(
+			CoordinateReferenceSystem crs ) {
+		final CoordinateSystem cs = crs.getCoordinateSystem();
+		if (cs != null && cs.getDimension() > 0) return cs.getAxis(
+				0).getDirection().toString();
+		return "";
+	}
+
 	@Override
 	public void write(
 			final DataOutput output )
 			throws IOException {
 		output.writeUTF(featureType.getTypeName());
 		output.writeUTF(DataUtilities.encodeType(featureType));
+		output.writeUTF(getAxis(featureType.getCoordinateReferenceSystem()));
+
 		// write feature id
 		output.writeUTF(feature.getID());
 		// write the attributes

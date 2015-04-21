@@ -30,6 +30,7 @@ import mil.nga.giat.geowave.vector.adapter.FeatureDataAdapter;
 import org.apache.commons.cli.Option;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.util.Tool;
@@ -70,7 +71,7 @@ public class GroupAssigmentJobRunnerTest
 			}
 
 			@Override
-			public boolean waitForCompletion(
+			public Counters waitForCompletion(
 					final Job job )
 					throws ClassNotFoundException,
 					IOException,
@@ -145,7 +146,7 @@ public class GroupAssigmentJobRunnerTest
 						10,
 						job.getNumReduceTasks());
 
-				return true;
+				return new Counters();
 			}
 
 			@Override

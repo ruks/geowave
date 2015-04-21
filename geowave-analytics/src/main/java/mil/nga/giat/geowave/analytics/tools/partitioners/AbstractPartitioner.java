@@ -10,6 +10,8 @@ import java.util.Set;
 import mil.nga.giat.geowave.analytics.parameters.ClusteringParameters;
 import mil.nga.giat.geowave.analytics.parameters.CommonParameters;
 import mil.nga.giat.geowave.analytics.parameters.ParameterEnum;
+import mil.nga.giat.geowave.analytics.parameters.PartitionParameters;
+import mil.nga.giat.geowave.analytics.parameters.PartitionParameters.Partition;
 import mil.nga.giat.geowave.analytics.tools.ConfigurationWrapper;
 import mil.nga.giat.geowave.analytics.tools.PropertyManagement;
 import mil.nga.giat.geowave.analytics.tools.RunnerUtils;
@@ -38,6 +40,7 @@ public abstract class AbstractPartitioner<T> implements
 
 	private transient Index index = null;
 	private transient double[] distancePerDimension = null;
+	private transient double precisionFactor = 1.0;
 
 	public AbstractPartitioner() {
 		distancePerDimension = new double[0];
@@ -120,24 +123,64 @@ public abstract class AbstractPartitioner<T> implements
 		}
 	}
 
-	@Override
-	public void initialize(
-			final ConfigurationWrapper context )
-			throws IOException {
+	public static void putDistances(
+			final PropertyManagement config,
+			double[] distances ) {
 
-		final String distances = context.getString(
+		final StringBuffer buffer = new StringBuffer();
+		for (double distance : distances) {
+			buffer.append(distance);
+			buffer.append(',');
+		}
+		config.store(
 				ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
-				this.getClass(),
+				buffer.substring(
+						0,
+						buffer.length() - 1));
+
+		config.store(
+				ClusteringParameters.Clustering.GEOMETRIC_DISTANCE_UNIT,
+				"m");
+
+	}
+
+	public static double[] getDistances(
+			final ConfigurationWrapper config,
+			final Class<?> classContext ) {
+		final String distances = config.getString(
+				ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
+				classContext,
 				"0.000001");
 
 		final String distancesArray[] = distances.split(",");
-		distancePerDimension = new double[distancesArray.length];
+		final double[] distancePerDimension = new double[distancesArray.length];
 		{
 			int i = 0;
 			for (final String eachDistance : distancesArray) {
 				distancePerDimension[i++] = Double.valueOf(eachDistance);
 			}
 		}
+		return distancePerDimension;
+	}
+
+	@Override
+	public void initialize(
+			final ConfigurationWrapper context )
+			throws IOException {
+
+		distancePerDimension = getDistances(
+				context,
+				this.getClass());
+
+		this.precisionFactor = context.getDouble(
+				Partition.PARTITION_PRECISION,
+				this.getClass(),
+				1.0);
+
+		if (precisionFactor < 0 || precisionFactor > 1.0) throw new IllegalArgumentException(
+				String.format(
+						"Precision value must be between 0 and 1: %.6f",
+						precisionFactor));
 
 		try {
 			final IndexModelBuilder builder = context.getInstance(
@@ -176,7 +219,8 @@ public abstract class AbstractPartitioner<T> implements
 				runTimeProperties,
 				new ParameterEnum[] {
 					CommonParameters.Common.INDEX_MODEL_BUILDER_CLASS,
-					ClusteringParameters.Clustering.DISTANCE_THRESHOLDS
+					ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
+					PartitionParameters.Partition.PARTITION_PRECISION
 				});
 	}
 
@@ -191,8 +235,10 @@ public abstract class AbstractPartitioner<T> implements
 		final int[] dimensionPrecision = new int[indexModel.getDimensions().length];
 		for (int i = 0; i < dimensionPrecision.length; i++) {
 			final double distance = distancePerDimensionForIndex[i] * 2.0; // total
-																			// width...(radius)
-			dimensionPrecision[i] = Math.abs((int) (Math.log(dimensions[i].getRange() / distance) / Math.log(2)));
+			// width...(radius)
+			// adjust by precision factory (0 to 1.0)
+			dimensionPrecision[i] = (int) (precisionFactor * (double) Math.abs((int) (Math.log(dimensions[i].getRange() / distance) / Math.log(2))));
+
 			totalRequestedPrecision += dimensionPrecision[i];
 		}
 		if (totalRequestedPrecision > 63) {
@@ -207,6 +253,8 @@ public abstract class AbstractPartitioner<T> implements
 				dimensionPrecision,
 				SFCType.HILBERT);
 
+		// Not relevant since this is a single tier strategy.
+		// For now, just setting to a non-zero reasonable value
 		indexStrategy.setMaxEstimatedDuplicateIds((int) Math.pow(
 				dimensions.length,
 				4));

@@ -3,8 +3,12 @@ package mil.nga.giat.geowave.analytics.clustering;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
+import java.io.File;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import mil.nga.giat.geowave.accumulo.AccumuloDataStore;
 import mil.nga.giat.geowave.accumulo.BasicAccumuloOperations;
@@ -17,11 +21,15 @@ import mil.nga.giat.geowave.store.index.Index;
 import mil.nga.giat.geowave.store.index.IndexType;
 import mil.nga.giat.geowave.vector.adapter.FeatureDataAdapter;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+import org.apache.commons.io.FileUtils;
+import org.geotools.data.DataStore;
+import org.geotools.data.DataStoreFinder;
+import org.geotools.data.FeatureSource;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.type.BasicFeatureTypes;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
@@ -29,15 +37,27 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
 
 public class CentroidManagerTest
 {
+	final SimpleFeatureType ftype = AnalyticFeature.createGeometryFeatureAdapter(
+			"centroid",
+			new String[] {
+				"extra1"
+			},
+			BasicFeatureTypes.DEFAULT_NAMESPACE,
+			ClusteringUtils.CLUSTERING_CRS).getType();
+
+	final MockInstance mockDataInstance = new MockInstance(
+			UUID.randomUUID().toString());
+
+	final GeometryFactory factory = new GeometryFactory();
+
 	@Test
 	public void testSampleRecall()
-			throws AccumuloException,
-			AccumuloSecurityException,
-			IOException {
-		final MockInstance mockDataInstance = new MockInstance();
+			throws Exception {
+
 		final Connector mockDataConnector = mockDataInstance.getConnector(
 				"root",
 				new PasswordToken(
@@ -46,14 +66,6 @@ public class CentroidManagerTest
 		final BasicAccumuloOperations dataOps = new BasicAccumuloOperations(
 				mockDataConnector);
 
-		final SimpleFeatureType ftype = AnalyticFeature.createGeometryFeatureAdapter(
-				"centroid",
-				new String[] {
-					"extra1"
-				},
-				BasicFeatureTypes.DEFAULT_NAMESPACE,
-				ClusteringUtils.CLUSTERING_CRS).getType();
-		final GeometryFactory factory = new GeometryFactory();
 		final String grp1 = "g1";
 		final String grp2 = "g2";
 		SimpleFeature feature = AnalyticFeature.createGeometryFeature(
@@ -249,5 +261,48 @@ public class CentroidManagerTest
 
 		});
 
+		FileUtils.deleteDirectory(new File(
+				"./testdata"));
+
+		assertTrue(new File(
+				"./testdata").mkdirs());
+
+		mananger.toShapeFile(
+				"./testdata",
+				Point.class);
+
+		assertEquals(
+				3,
+				checkShapeFile("./testdata/b1"));
+
+		// FileUtils.deleteDirectory(new File("./testdata"));
+
+	}
+
+	private int checkShapeFile(
+			String location )
+			throws Exception {
+		File file = new File(
+				location + ".shp");
+		Map<String, Serializable> map = new HashMap<>();
+		map.put(
+				"url",
+				file.toURI().toURL());
+
+		DataStore dataStore = DataStoreFinder.getDataStore(map);
+		String typeName = dataStore.getTypeNames()[0];
+
+		FeatureSource<SimpleFeatureType, SimpleFeature> source = dataStore.getFeatureSource(typeName);
+
+		FeatureCollection<?, SimpleFeature> collection = source.getFeatures();
+
+		int count = 0;
+		try (FeatureIterator<SimpleFeature> results = collection.features()) {
+			while (results.hasNext()) {
+				SimpleFeature feature = (SimpleFeature) results.next();
+				count += (feature.getDefaultGeometry() != null ? 1 : 0);
+			}
+		}
+		return count;
 	}
 }

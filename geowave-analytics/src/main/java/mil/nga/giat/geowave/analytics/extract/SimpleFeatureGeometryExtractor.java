@@ -6,6 +6,7 @@ import mil.nga.giat.geowave.vector.adapter.FeatureGeometryHandler;
 
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -32,7 +33,9 @@ public class SimpleFeatureGeometryExtractor extends
 
 	protected static int getSRID(
 			final SimpleFeature geometryFeature ) {
-		final ReferenceIdentifier id = getFirst(geometryFeature.getDefaultGeometryProperty().getDescriptor().getCoordinateReferenceSystem().getIdentifiers());
+		final CoordinateReferenceSystem crs = geometryFeature.getDefaultGeometryProperty().getDescriptor().getCoordinateReferenceSystem();
+		if (crs == null) return 4326;
+		final ReferenceIdentifier id = getFirst(crs.getIdentifiers());
 		if (id == null) {
 			return 4326;
 		}

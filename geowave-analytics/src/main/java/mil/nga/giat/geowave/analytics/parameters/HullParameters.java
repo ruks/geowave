@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import mil.nga.giat.geowave.analytics.extract.CentroidExtractor;
+import mil.nga.giat.geowave.analytics.mapreduce.nn.DBScanMapReduce.HullBuilder;
 import mil.nga.giat.geowave.analytics.tools.AnalyticItemWrapperFactory;
 import mil.nga.giat.geowave.analytics.tools.Projection;
 import mil.nga.giat.geowave.analytics.tools.PropertyManagement;
@@ -23,12 +24,16 @@ public class HullParameters
 				String.class),
 		REDUCER_COUNT(
 				Integer.class),
+		ITERATION(
+				Integer.class),
 		PROJECTION_CLASS(
 				Projection.class),
 		EXTRACTOR_CLASS(
 				CentroidExtractor.class),
 		WRAPPER_FACTORY_CLASS(
 				AnalyticItemWrapperFactory.class),
+		HULL_BUILDER(
+				Projection.class),
 		ZOOM_LEVEL(
 				Integer.class);
 

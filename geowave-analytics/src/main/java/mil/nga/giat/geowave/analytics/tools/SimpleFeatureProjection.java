@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.analytics.tools;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -25,4 +26,7 @@ public class SimpleFeatureProjection implements
 			ConfigurationWrapper context )
 			throws IOException {}
 
+	public void setup(
+			PropertyManagement runTimeProperties,
+			Configuration configuration ) {}
 }

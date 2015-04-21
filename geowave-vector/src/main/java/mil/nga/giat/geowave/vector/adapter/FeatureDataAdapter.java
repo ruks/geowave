@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.vector.adapter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.accumulo.mapreduce.HadoopDataAdapter;
 import mil.nga.giat.geowave.accumulo.mapreduce.HadoopWritableSerializer;
@@ -41,6 +42,10 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.operation.MathTransform;
 
 /**
@@ -298,14 +303,24 @@ public class FeatureDataAdapter extends
 				visibilityAttributeName);
 	}
 
+	private String getAxis(
+			CoordinateReferenceSystem crs ) {
+		// final CoordinateSystem cs = crs.getCoordinateSystem();
+		// if (cs != null && cs.getDimension() > 0) return cs.getAxis(
+		// 0).getDirection().toString();
+		return "";
+	}
+
 	@Override
 	protected byte[] defaultTypeDataToBinary() {
 		// serialize the feature type
 		final String encodedType = DataUtilities.encodeType(persistedType);
+		final String axis = getAxis(persistedType.getCoordinateReferenceSystem());
 		final String typeName = reprojectedType.getTypeName();
 		final byte[] typeNameBytes = StringUtils.stringToBinary(typeName);
 		final byte[] fieldVisibilityAtributeNameBytes = StringUtils.stringToBinary(visibilityAttributeName);
 		final byte[] visibilityManagementClassNameBytes = StringUtils.stringToBinary(fieldVisibilityManagement.getClass().getCanonicalName());
+		final byte[] axisBytes = StringUtils.stringToBinary(axis);
 
 		final TimeDescriptors timeDescriptors = getTimeDescriptors();
 		final byte[] timeAndRangeBytes = timeDescriptors.toBinary();
@@ -319,23 +334,24 @@ public class FeatureDataAdapter extends
 			namespaceBytes = new byte[0];
 		}
 		final byte[] encodedTypeBytes = StringUtils.stringToBinary(encodedType);
-		final ByteBuffer buf = ByteBuffer.allocate(encodedTypeBytes.length + typeNameBytes.length + namespaceBytes.length + fieldVisibilityAtributeNameBytes.length + visibilityManagementClassNameBytes.length + timeAndRangeBytes.length + 20);
+		final ByteBuffer buf = ByteBuffer.allocate(encodedTypeBytes.length + typeNameBytes.length + namespaceBytes.length + fieldVisibilityAtributeNameBytes.length + visibilityManagementClassNameBytes.length + timeAndRangeBytes.length + axisBytes.length + 24);
 		buf.putInt(typeNameBytes.length);
 		buf.putInt(namespaceBytes.length);
 		buf.putInt(fieldVisibilityAtributeNameBytes.length);
 		buf.putInt(visibilityManagementClassNameBytes.length);
 		buf.putInt(timeAndRangeBytes.length);
+		buf.putInt(axisBytes.length);
 		buf.put(typeNameBytes);
 		buf.put(namespaceBytes);
 		buf.put(fieldVisibilityAtributeNameBytes);
 		buf.put(visibilityManagementClassNameBytes);
 		buf.put(timeAndRangeBytes);
+		buf.put(axisBytes);
 		buf.put(encodedTypeBytes);
 
 		return buf.array();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Object defaultTypeDataFromBinary(
 			final byte[] bytes ) {
@@ -346,11 +362,13 @@ public class FeatureDataAdapter extends
 		final byte[] fieldVisibilityAtributeNameBytes = new byte[buf.getInt()];
 		final byte[] visibilityManagementClassNameBytes = new byte[buf.getInt()];
 		final byte[] timeAndRangeBytes = new byte[buf.getInt()];
+		final byte[] axisBytes = new byte[buf.getInt()];
 		buf.get(typeNameBytes);
 		buf.get(namespaceBytes);
 		buf.get(fieldVisibilityAtributeNameBytes);
 		buf.get(visibilityManagementClassNameBytes);
 		buf.get(timeAndRangeBytes);
+		buf.get(axisBytes);
 
 		final String typeName = StringUtils.stringFromBinary(typeNameBytes);
 		String namespace = StringUtils.stringFromBinary(namespaceBytes);
@@ -369,12 +387,12 @@ public class FeatureDataAdapter extends
 					ex);
 		}
 
-		final byte[] encodedTypeBytes = new byte[bytes.length - typeNameBytes.length - namespaceBytes.length - fieldVisibilityAtributeNameBytes.length - visibilityManagementClassNameBytes.length - timeAndRangeBytes.length - 20];
+		final byte[] encodedTypeBytes = new byte[bytes.length - axisBytes.length - typeNameBytes.length - namespaceBytes.length - fieldVisibilityAtributeNameBytes.length - visibilityManagementClassNameBytes.length - timeAndRangeBytes.length - 24];
 		buf.get(encodedTypeBytes);
 
 		final String encodedType = StringUtils.stringFromBinary(encodedTypeBytes);
 		try {
-			final SimpleFeatureType myType = DataUtilities.createType(
+			SimpleFeatureType myType = DataUtilities.createType(
 					namespace,
 					typeName,
 					encodedType);
@@ -400,6 +418,7 @@ public class FeatureDataAdapter extends
 					"Unable to deserialized feature type",
 					e);
 		}
+
 		return null;
 	}
 

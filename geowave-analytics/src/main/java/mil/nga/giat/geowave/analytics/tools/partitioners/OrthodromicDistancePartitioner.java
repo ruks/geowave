@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.analytics.tools.partitioners;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -94,7 +95,7 @@ public class OrthodromicDistancePartitioner<T> extends
 				entryGeometry.getEnvelope(),
 				otherDimensionData);
 		final List<Geometry> geometries = getGeometries(
-				entryGeometry.getCentroid().getCoordinate(),
+				entryGeometry.getEnvelope(),
 				getDistancePerDimension());
 		final MultiDimensionalNumericData[] values = new MultiDimensionalNumericData[geometries.size()];
 		int i = 0;
@@ -149,6 +150,22 @@ public class OrthodromicDistancePartitioner<T> extends
 			if (clazz.isInstance(fields[i].getBaseDefinition())) return i;
 		}
 		return -1;
+	}
+
+	private List<Geometry> getGeometries(
+			final Geometry envelope,
+			final double[] distancePerDimension ) {
+		List<Geometry> finalList = new ArrayList<Geometry>();
+		for (Coordinate coordinate : envelope.getCoordinates()) {
+			finalList.addAll(calculator.buildSurroundingGeometries(
+					new double[] {
+						distancePerDimension[longDimensionPosition],
+						distancePerDimension[latDimensionPosition]
+					},
+					geometricDistanceUnit == null ? SI.METER : geometricDistanceUnit,
+					coordinate));
+		}
+		return finalList;
 	}
 
 	private List<Geometry> getGeometries(

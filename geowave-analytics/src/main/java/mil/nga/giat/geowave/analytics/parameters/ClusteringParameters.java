@@ -15,6 +15,8 @@ public class ClusteringParameters
 			ParameterEnum {
 		MAX_REDUCER_COUNT(
 				Integer.class),
+		MINIMUM_SIZE(
+				Integer.class),
 		RETAIN_GROUP_ASSIGNMENTS(
 				Boolean.class),
 		MAX_ITERATIONS(
@@ -56,6 +58,15 @@ public class ClusteringParameters
 					Clustering.ZOOM_LEVELS,
 					"zl",
 					"Number of Zoom Levels to Process",
+					true));
+		}
+		if (contains(
+				params,
+				Clustering.MINIMUM_SIZE)) {
+			options.add(PropertyManagement.newOption(
+					Clustering.MINIMUM_SIZE,
+					"cms",
+					"Minimum Cluster Size",
 					true));
 		}
 		if (contains(

@@ -1,19 +1,44 @@
 package mil.nga.giat.geowave.analytics.mapreduce.nn;
 
+import org.apache.commons.codec.binary.Hex;
+
+import mil.nga.giat.geowave.index.ByteArrayId;
+
 public class NNData<T> implements
 		Comparable<NNData<T>>
 {
-	private T neighbor;
+	private T element;
+	private ByteArrayId id;
 	private double distance;
 
 	public NNData() {}
 
 	public NNData(
-			final T neighbor,
+			T element,
+			ByteArrayId id,
+			double distance ) {
+		super();
+		this.element = element;
+		this.id = id;
+		this.distance = distance;
+	}
+
+	public NNData(
+			final NNData<T> element,
 			final double distance ) {
 		super();
-		this.neighbor = neighbor;
+		this.element = element.getElement();
+		this.id = element.getId();
 		this.distance = distance;
+	}
+
+	protected ByteArrayId getId() {
+		return id;
+	}
+
+	protected void setId(
+			ByteArrayId id ) {
+		this.id = id;
 	}
 
 	public double getDistance() {
@@ -25,24 +50,18 @@ public class NNData<T> implements
 		this.distance = distance;
 	}
 
-	protected T getNeighbor() {
-		return neighbor;
+	protected T getElement() {
+		return element;
 	}
 
-	protected void setNeighbor(
+	protected void setElement(
 			final T neighbor ) {
-		this.neighbor = neighbor;
+		this.element = neighbor;
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		long temp;
-		temp = Double.doubleToLongBits(distance);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + ((neighbor == null) ? 0 : neighbor.hashCode());
-		return result;
+		return ((element == null) ? 0 : element.hashCode());
 	}
 
 	@Override
@@ -53,11 +72,10 @@ public class NNData<T> implements
 		if (getClass() != obj.getClass()) return false;
 		@SuppressWarnings("unchecked")
 		NNData<T> other = (NNData<T>) obj;
-		if (Double.doubleToLongBits(distance) != Double.doubleToLongBits(other.distance)) return false;
-		if (neighbor == null) {
-			if (other.neighbor != null) return false;
+		if (element == null) {
+			if (other.element != null) return false;
 		}
-		else if (!neighbor.equals(other.neighbor)) return false;
+		else if (!element.equals(other.element)) return false;
 		return true;
 	}
 
@@ -72,4 +90,8 @@ public class NNData<T> implements
 		return dist == 0 ? hashCode() - otherNNData.hashCode() : dist;
 	}
 
+	@Override
+	public String toString() {
+		return Hex.encodeHexString(id.getBytes()) + ":" + element.toString() + "(" + this.distance + ")";
+	}
 }

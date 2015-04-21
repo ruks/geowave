@@ -14,6 +14,7 @@ import mil.nga.giat.geowave.analytics.parameters.HullParameters;
 import mil.nga.giat.geowave.analytics.parameters.MapReduceParameters;
 import mil.nga.giat.geowave.analytics.parameters.ParameterEnum;
 import mil.nga.giat.geowave.analytics.tools.AnalyticFeature;
+import mil.nga.giat.geowave.analytics.tools.Projection;
 import mil.nga.giat.geowave.analytics.tools.PropertyManagement;
 import mil.nga.giat.geowave.analytics.tools.RunnerUtils;
 import mil.nga.giat.geowave.analytics.tools.SimpleFeatureItemWrapperFactory;
@@ -68,59 +69,6 @@ public class ConvexHullJobRunner extends
 		job.setOutputValueClass(Object.class);
 	}
 
-	private DataAdapter<?> getAdapter(
-			final PropertyManagement runTimeProperties )
-			throws Exception {
-
-		final String projectionDataTypeId = runTimeProperties.storeIfEmpty(
-				HullParameters.Hull.DATA_TYPE_ID,
-				"convex_hull").toString();
-
-		final AdapterStore adapterStore = super.getAdapterStore(runTimeProperties);
-
-		DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
-				projectionDataTypeId));
-
-		if (adapter == null) {
-			final String namespaceURI = runTimeProperties.storeIfEmpty(
-					HullParameters.Hull.DATA_NAMESPACE_URI,
-					BasicFeatureTypes.DEFAULT_NAMESPACE).toString();
-			adapter = AnalyticFeature.createGeometryFeatureAdapter(
-					projectionDataTypeId,
-					new String[0],
-					namespaceURI,
-					ClusteringUtils.CLUSTERING_CRS);
-			adapterStore.addAdapter(adapter);
-		}
-		return adapter;
-
-	}
-
-	private void checkIndex(
-			final PropertyManagement runTimeProperties )
-			throws Exception {
-
-		final String indexId = runTimeProperties.getPropertyAsString(
-				HullParameters.Hull.INDEX_ID,
-				runTimeProperties.getPropertyAsString(CentroidParameters.Centroid.INDEX_ID));
-
-		final IndexStore indexStore = super.getIndexStore(runTimeProperties);
-
-		Index index = indexStore.getIndex(new ByteArrayId(
-				indexId));
-		if (index == null) {
-			index = new CustomIdIndex(
-					IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy(),
-					IndexType.SPATIAL_VECTOR.getDefaultIndexModel(),
-					DimensionalityType.SPATIAL_TEMPORAL,
-					DataType.VECTOR,
-					new ByteArrayId(
-							indexId));
-			indexStore.addIndex(index);
-
-		}
-	}
-
 	public Class<?> getScope() {
 		return ConvexHullMapReduce.class;
 	}
@@ -132,11 +80,37 @@ public class ConvexHullJobRunner extends
 			throws Exception {
 
 		runTimeProperties.storeIfEmpty(
-				HullParameters.Hull.WRAPPER_FACTORY_CLASS,
-				SimpleFeatureItemWrapperFactory.class);
-		runTimeProperties.storeIfEmpty(
 				HullParameters.Hull.PROJECTION_CLASS,
 				SimpleFeatureProjection.class);
+
+		Projection<?> projectionFunction = runTimeProperties.getClassInstance(
+				HullParameters.Hull.PROJECTION_CLASS,
+				Projection.class,
+				SimpleFeatureProjection.class);
+
+		projectionFunction.setup(
+				runTimeProperties,
+				config);
+
+		runTimeProperties.storeIfEmpty(
+				HullParameters.Hull.WRAPPER_FACTORY_CLASS,
+				SimpleFeatureItemWrapperFactory.class);
+
+		RunnerUtils.setParameter(
+				config,
+				getScope(),
+				new Object[] {
+					checkIndex(
+							runTimeProperties,
+							HullParameters.Hull.INDEX_ID,
+							runTimeProperties.getPropertyAsString(
+									CentroidParameters.Centroid.INDEX_ID,
+									"hull_idx"))
+				},
+				new ParameterEnum[] {
+					HullParameters.Hull.INDEX_ID
+				});
+
 		RunnerUtils.setParameter(
 				config,
 				getScope(),
@@ -144,8 +118,7 @@ public class ConvexHullJobRunner extends
 				new ParameterEnum[] {
 					HullParameters.Hull.WRAPPER_FACTORY_CLASS,
 					HullParameters.Hull.PROJECTION_CLASS,
-					HullParameters.Hull.DATA_TYPE_ID,
-					HullParameters.Hull.INDEX_ID
+					HullParameters.Hull.DATA_TYPE_ID
 				});
 		setReducerCount(runTimeProperties.getPropertyAsInt(
 				HullParameters.Hull.REDUCER_COUNT,
@@ -167,8 +140,10 @@ public class ConvexHullJobRunner extends
 
 		addDataAdapter(
 				config,
-				getAdapter(runTimeProperties));
-		checkIndex(runTimeProperties);
+				getAdapter(
+						runTimeProperties,
+						HullParameters.Hull.DATA_TYPE_ID,
+						HullParameters.Hull.DATA_NAMESPACE_URI));
 
 		return super.run(
 				config,

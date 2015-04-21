@@ -77,6 +77,7 @@ public abstract class GeoWaveWritableInputReducer<KEYOUT, VALUEOUT> extends
 			final Reducer<GeoWaveInputKey, ObjectWritable, KEYOUT, VALUEOUT>.Context context )
 			throws IOException,
 			InterruptedException {
+		super.setup(context);
 		try {
 			serializationTool = new HadoopWritableSerializationTool(
 					new JobContextAdapterStore(
