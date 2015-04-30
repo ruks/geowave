@@ -72,7 +72,7 @@ public class Landsat8CommandLineOptions
 		final Option cqlFilter = new Option(
 				CQL_FILTER_OPTION,
 				true,
-				"An optional CQL expression to filter the ingested imagery. The feature type for the expression has the following attributes: shape (Geometry), entityId (String), acquisitionDate (Date), cloudCover (double), processingLevel (String), path (int), row (int)");
+				"An optional CQL expression to filter the ingested imagery. The feature type for the expression has the following attributes: shape (Geometry), acquisitionDate (Date), cloudCover (double), processingLevel (String), path (int), row (int) and the feature ID is entityId for the scene");
 		cqlFilter.setRequired(false);
 		allOptions.addOption(cqlFilter);
 

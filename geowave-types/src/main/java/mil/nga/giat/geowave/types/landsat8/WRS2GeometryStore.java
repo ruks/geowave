@@ -18,7 +18,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 
 public class WRS2GeometryStore
 {
@@ -74,7 +74,7 @@ public class WRS2GeometryStore
 	private static final String WRS2_SHAPE_DIRECTORY = "wrs2_asc_desc";
 	private final File wrs2Shape;
 	private final File wrs2Directory;
-	private final Map<WRS2Key, Geometry> featureCache = new HashMap<WRS2Key, Geometry>();
+	private final Map<WRS2Key, Polygon> featureCache = new HashMap<WRS2Key, Polygon>();
 	private SimpleFeatureType wrs2Type;
 
 	public WRS2GeometryStore(
@@ -134,7 +134,7 @@ public class WRS2GeometryStore
 						new WRS2Key(
 								path.intValue(),
 								row.intValue()),
-						(Geometry) feature.getDefaultGeometry());
+						(Polygon) feature.getDefaultGeometry());
 			}
 		}
 		catch (final IOException e) {
@@ -145,7 +145,7 @@ public class WRS2GeometryStore
 		}
 	}
 
-	public Geometry getGeometry(
+	public Polygon getGeometry(
 			final int path,
 			final int row ) {
 		return featureCache.get(new WRS2Key(
