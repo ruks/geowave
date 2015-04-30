@@ -26,6 +26,7 @@ public class CommandLineUtils
 			System.exit(0);
 		}
 	}
+
 	public static void printHelp(
 			final Options options,
 			final String operation ) {

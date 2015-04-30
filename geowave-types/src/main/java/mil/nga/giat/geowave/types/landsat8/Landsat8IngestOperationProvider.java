@@ -12,7 +12,8 @@ public class Landsat8IngestOperationProvider implements
 		new CLIOperation(
 				"ingest-landsat8",
 				"Ingest routine for downloading and ingesting Landsat 8 imagery publicly available on AWS",
-				new Landsat8IngestCLIDriver("ingest-landsat8"))
+				new Landsat8IngestCLIDriver(
+						"ingest-landsat8"))
 	};
 
 	@Override

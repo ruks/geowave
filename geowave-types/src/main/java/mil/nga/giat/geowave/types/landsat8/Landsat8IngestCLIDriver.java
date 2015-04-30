@@ -49,7 +49,10 @@ public class Landsat8IngestCLIDriver implements
 					landsatOptions.getCqlFilter(),
 					landsatOptions.getWorkspaceDir());
 		}
-		catch (IOException e) {LOGGER.error("", e);
+		catch (IOException e) {
+			LOGGER.error(
+					"",
+					e);
 		}
 	}
 
