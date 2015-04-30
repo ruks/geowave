@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -39,16 +40,14 @@ public class SceneFeatureIterator implements
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(SceneFeatureIterator.class);
 	private static final String SCENES_GZ_URL = "http://landsat-pds.s3.amazonaws.com/scene_list.gz";
-	private static SimpleDateFormat AQUISITION_DATE_FORMAT = new SimpleDateFormat(2015-01-02 15:49:05.571384);
+	private static SimpleDateFormat AQUISITION_DATE_FORMAT = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss.SSS");
 	private final String SCENES_DIR = "scenes";
 	private final String COMPRESSED_FILE_NAME = "scene_list.gz";
 	private final String CSV_FILE_NAME = "scene_list";
 	private final String TEMP_CSV_FILE_NAME = "scene_list.tmp";
-	private final Filter cqlFilter;
-	private final WRS2GeometryStore geometryStore;
 	private CSVParser parser;
 	private Iterator<SimpleFeature> iterator;
-	private SimpleFeatureType type;
 
 	public SceneFeatureIterator(
 			final boolean onlyScenesSinceLastRun,
@@ -56,19 +55,21 @@ public class SceneFeatureIterator implements
 			final String workspaceDir )
 			throws MalformedURLException,
 			IOException {
-		this.cqlFilter = cqlFilter;
 		init(
 				new File(
 						workspaceDir,
 						SCENES_DIR),
-				onlyScenesSinceLastRun);
-		geometryStore = new WRS2GeometryStore(
-				workspaceDir);
+				onlyScenesSinceLastRun,
+				new WRS2GeometryStore(
+						workspaceDir),
+				cqlFilter);
 	}
 
 	private void init(
 			final File scenesDir,
-			final boolean onlyScenesSinceLastRun )
+			final boolean onlyScenesSinceLastRun,
+			final WRS2GeometryStore geometryStore,
+			final Filter cqlFilter )
 			throws IOException {
 		scenesDir.mkdirs();
 		final File compressedFile = new File(
@@ -174,22 +175,35 @@ public class SceneFeatureIterator implements
 		typeBuilder.add(
 				"shape",
 				Polygon.class);
-		typeBuilder.add("acquisitionDate", Date.class);
-		typeBuilder.add("cloudCover", Double.class);
-		typeBuilder.add("processingLevel", String.class);
-		typeBuilder.add("path", Integer.class);
-		typeBuilder.add("row", Integer.class);
-		type = typeBuilder.buildFeatureType();
+		typeBuilder.add(
+				"acquisitionDate",
+				Date.class);
+		typeBuilder.add(
+				"cloudCover",
+				Double.class);
+		typeBuilder.add(
+				"processingLevel",
+				String.class);
+		typeBuilder.add(
+				"path",
+				Integer.class);
+		typeBuilder.add(
+				"row",
+				Integer.class);
+		final SimpleFeatureType type = typeBuilder.buildFeatureType();
 		// wrap the iterator with a feature conversion and a filter (if
 		// provided)
 
 		iterator = Iterators.transform(
 				csvIterator,
-				new CSVToFeatureTransform(geometryStore, type));
+				new CSVToFeatureTransform(
+						geometryStore,
+						type));
 		if (cqlFilter != null) {
 			iterator = Iterators.filter(
 					iterator,
-					new CqlFilterPredicate(cqlFilter));
+					new CqlFilterPredicate(
+							cqlFilter));
 		}
 	}
 
@@ -230,14 +244,15 @@ public class SceneFeatureIterator implements
 		// shape (Geometry), entityId (String), acquisitionDate (Date),
 		// cloudCover (double), processingLevel (String), path (int), row (int)
 		private final WRS2GeometryStore wrs2Geometry;
-		private SimpleFeatureBuilder featureBuilder;
+		private final SimpleFeatureBuilder featureBuilder;
 
 		public CSVToFeatureTransform(
 				final WRS2GeometryStore wrs2Geometry,
-				final SimpleFeatureType type) {
+				final SimpleFeatureType type ) {
 			this.wrs2Geometry = wrs2Geometry;
 
-			final SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(type);
+			featureBuilder = new SimpleFeatureBuilder(
+					type);
 		}
 
 		// entityId,acquisitionDate,cloudCover,processingLevel,path,row,min_lat,min_lon,max_lat,max_lon,download_url
@@ -245,15 +260,28 @@ public class SceneFeatureIterator implements
 		public SimpleFeature apply(
 				final CSVRecord input ) {
 			final String entityId = input.get("entityId");
-			final Date aquisitionDate = AQUISITION_DATE_FORMAT.parse(input.get("acquisitionDate"));
 			final double cloudCover = Double.parseDouble(input.get("cloudCover"));
 			final String processingLevel = input.get("processingLevel");
 			final int path = Integer.parseInt(input.get("path"));
 			final int row = Integer.parseInt(input.get("row"));
 
-			final Polygon shape = wrs2Geometry.getGeometry(path, row);
+			final Polygon shape = wrs2Geometry.getGeometry(
+					path,
+					row);
 			featureBuilder.add(shape);
-			featureBuilder.add(aquisitionDate);
+			Date aquisitionDate;
+			try {
+				aquisitionDate = AQUISITION_DATE_FORMAT.parse(input.get("acquisitionDate"));
+				featureBuilder.add(aquisitionDate);
+			}
+			catch (final ParseException e) {
+				LOGGER.warn(
+						"Unable to parse aquisition date",
+						e);
+
+				featureBuilder.add(null);
+			}
+
 			featureBuilder.add(cloudCover);
 			featureBuilder.add(processingLevel);
 			featureBuilder.add(path);
@@ -266,10 +294,12 @@ public class SceneFeatureIterator implements
 			Predicate<SimpleFeature>
 	{
 		private final Filter cqlFilter;
+
 		public CqlFilterPredicate(
 				final Filter cqlFilter ) {
 			this.cqlFilter = cqlFilter;
 		}
+
 		@Override
 		public boolean apply(
 				final SimpleFeature input ) {
