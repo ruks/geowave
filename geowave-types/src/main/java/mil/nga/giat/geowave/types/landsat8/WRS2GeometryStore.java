@@ -24,7 +24,7 @@ public class WRS2GeometryStore
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(WRS2GeometryStore.class);
 
-	private static class WRS2Key
+	protected static class WRS2Key
 	{
 		private final int path;
 		private final int row;
