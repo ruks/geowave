@@ -4,10 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
+import mil.nga.giat.geowave.core.cli.CommandLineUtils;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -20,10 +20,13 @@ public class AnalyticCLIOperationDriver implements
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AnalyticCLIOperationDriver.class);
 	private final IndependentJobRunner jobRunner;
+	private final String operation;
 
 	public AnalyticCLIOperationDriver(
+			final String operation,
 			final IndependentJobRunner jobRunner ) {
 		super();
+		this.operation = operation;
 		this.jobRunner = jobRunner;
 	}
 
@@ -34,11 +37,7 @@ public class AnalyticCLIOperationDriver implements
 		final Options options = new Options();
 		final OptionGroup baseOptionGroup = new OptionGroup();
 		baseOptionGroup.setRequired(false);
-		baseOptionGroup.addOption(new Option(
-				"h",
-				"help",
-				false,
-				"Display help"));
+		baseOptionGroup.addOption(CommandLineUtils.getHelpOption());
 		options.addOptionGroup(baseOptionGroup);
 
 		final Set<Option> optionSet = new HashSet<Option>();
@@ -51,32 +50,20 @@ public class AnalyticCLIOperationDriver implements
 		final CommandLine commandLine = parser.parse(
 				options,
 				args);
-		if (commandLine.hasOption("h")) {
-			printHelp(options);
+		CommandLineUtils.parseHelpOption(
+				commandLine,
+				options,
+				operation);
+		final PropertyManagement pm = new PropertyManagement();
+		pm.buildFromOptions(commandLine);
+		try {
+			jobRunner.run(pm);
+		}
+		catch (final Exception e) {
+			LOGGER.error(
+					"Unable to run analytic job",
+					e);
 			return;
 		}
-		else {
-			final PropertyManagement pm = new PropertyManagement();
-			pm.buildFromOptions(commandLine);
-			try {
-				jobRunner.run(pm);
-			}
-			catch (final Exception e) {
-				LOGGER.error(
-						"Unable to run analytic job",
-						e);
-				return;
-			}
-		}
-	}
-
-	private static void printHelp(
-			final Options options ) {
-		final HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(
-				"Analytics",
-				"\nOptions:",
-				options,
-				"");
 	}
 }

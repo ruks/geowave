@@ -21,16 +21,19 @@ public class MapReduceAnalyticOperationCLIProvider implements
 				"kmeans-parallel",
 				"KMeans Parallel Clustering",
 				new AnalyticCLIOperationDriver(
+						"kmeans-parallel",
 						new MultiLevelKMeansClusteringJobRunner())),
 		new CLIOperation(
 				"nn",
 				"Nearest Neighbors",
 				new AnalyticCLIOperationDriver(
+						"nn",
 						new NNJobRunner())),
 		new CLIOperation(
 				"kmeans-jump",
 				"KMeans Clustering using Jump Method",
 				new AnalyticCLIOperationDriver(
+						"kmeans-jump",
 						new MultiLevelJumpKMeansClusteringJobRunner()))
 	};
 
