@@ -19,25 +19,25 @@ public class Landsat8CommandLineOptions
 	private static final String CQL_FILTER_OPTION = "cql";
 	private static final String RETAIN_IMAGES_OPTION = "retainimages";
 	private static final String ONLY_SCENES_SINCE_LAST_RUN_OPTION = "sincelastrun";
-	private static final String OFFLINE_OPTION = "offline";
+	private static final String USE_CACHED_SCENES_OPTION = "usecachedscenes";
 
 	private final String workspaceDir;
 	private final String cqlFilter;
 	private final boolean retainImageFiles;
 	private final boolean onlyScenesSinceLastRun;
-	private final boolean offline;
+	private final boolean useCachedScenes;
 
 	public Landsat8CommandLineOptions(
 			final String workspaceDir,
 			final String cqlFilter,
 			final boolean retainImageFiles,
 			final boolean onlyScenesSinceLastRun,
-			final boolean offline ) {
+			final boolean useCachedScenes ) {
 		this.workspaceDir = workspaceDir;
 		this.cqlFilter = cqlFilter;
 		this.retainImageFiles = retainImageFiles;
 		this.onlyScenesSinceLastRun = onlyScenesSinceLastRun;
-		this.offline = offline;
+		this.useCachedScenes = useCachedScenes;
 	}
 
 	public static Landsat8CommandLineOptions parseOptions(
@@ -58,13 +58,13 @@ public class Landsat8CommandLineOptions
 		}
 		final boolean retainImageFiles = commandLine.hasOption(RETAIN_IMAGES_OPTION);
 		final boolean onlyScenesSinceLastRun = commandLine.hasOption(ONLY_SCENES_SINCE_LAST_RUN_OPTION);
-		final boolean offline = commandLine.hasOption(OFFLINE_OPTION);
+		final boolean useCachedScenes = commandLine.hasOption(USE_CACHED_SCENES_OPTION);
 		return new Landsat8CommandLineOptions(
 				workspaceDir,
 				cqlFilter,
 				retainImageFiles,
 				onlyScenesSinceLastRun,
-				offline);
+				useCachedScenes);
 	}
 
 	public static void applyOptions(
@@ -95,11 +95,11 @@ public class Landsat8CommandLineOptions
 				"An option to check the scenes list from the workspace and if it exists, to only ingest data since the last scene.");
 		onlyScenesSinceLastRun.setRequired(false);
 		allOptions.addOption(onlyScenesSinceLastRun);
-		
+
 		final Option offline = new Option(
-				OFFLINE_OPTION,
+				USE_CACHED_SCENES_OPTION,
 				false,
-				"An option to run against existing files in the workspace directory.");
+				"An option to run against the existing scenes catalog in the workspace directory if it exists.");
 		offline.setRequired(false);
 		allOptions.addOption(offline);
 	}
@@ -125,6 +125,10 @@ public class Landsat8CommandLineOptions
 			}
 		}
 		return null;
+	}
+
+	public boolean isUseCachedScenes() {
+		return useCachedScenes;
 	}
 
 	public boolean isRetainImageFiles() {

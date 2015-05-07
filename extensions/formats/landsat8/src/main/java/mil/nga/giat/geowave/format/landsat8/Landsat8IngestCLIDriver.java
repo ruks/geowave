@@ -46,6 +46,7 @@ public class Landsat8IngestCLIDriver implements
 		try {
 			final SceneFeatureIterator scenes = new SceneFeatureIterator(
 					landsatOptions.isOnlyScenesSinceLastRun(),
+					landsatOptions.isUseCachedScenes(),
 					landsatOptions.getCqlFilter(),
 					landsatOptions.getWorkspaceDir());
 		}

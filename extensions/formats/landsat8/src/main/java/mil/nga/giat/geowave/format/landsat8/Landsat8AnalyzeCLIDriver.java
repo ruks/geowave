@@ -1,10 +1,7 @@
 package mil.nga.giat.geowave.format.landsat8;
 
 import java.io.IOException;
-import java.net.URL;
-import java.text.NumberFormat;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -17,26 +14,24 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
 import org.opengis.feature.simple.SimpleFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 
 public class Landsat8AnalyzeCLIDriver implements
 		CLIOperationDriver
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8IngestCLIDriver.class);
-	private static final String DOWNLOAD_PREFIX = "http://landsat-pds.s3.amazonaws.com/L8";
+
 	private final String operation;
-	private final NumberFormat pathRowFormatter;
 	private Landsat8CommandLineOptions landsatOptions;
 
 	public Landsat8AnalyzeCLIDriver(
 			final String operation ) {
 		this.operation = operation;
-		pathRowFormatter = NumberFormat.getIntegerInstance();
-		pathRowFormatter.setMaximumIntegerDigits(3);
-		pathRowFormatter.setMinimumIntegerDigits(3);
 	}
 
 	@Override
@@ -56,74 +51,91 @@ public class Landsat8AnalyzeCLIDriver implements
 				allOptions,
 				operation);
 		parseOptionsInternal(commandLine);
-
+		runInternal(args);
 	}
 
 	protected void runInternal(
 			final String[] args ) {
 		try {
-			try (SceneFeatureIterator scenes = new SceneFeatureIterator(
+			try (BandFeatureIterator bands = new BandFeatureIterator(
 					landsatOptions.isOnlyScenesSinceLastRun(),
+					landsatOptions.isUseCachedScenes(),
 					landsatOptions.getCqlFilter(),
 					landsatOptions.getWorkspaceDir())) {
 				final TreeMap<String, Double> bandIdToMbMap = new TreeMap<String, Double>();
 				int sceneCount = 0;
 				final Set<WRS2Key> wrs2Keys = new HashSet<WRS2Key>();
-				final int minRow = Integer.MAX_VALUE;
-				final int minPath = Integer.MAX_VALUE;
-				final int maxRow = Integer.MIN_VALUE;
-				final int maxPath = Integer.MIN_VALUE;
-				final double minLat = Double.MAX_VALUE;
-				final double minLon = Double.MAX_VALUE;
-				final double maxLat = -Double.MAX_VALUE;
-				final double maxLon = -Double.MAX_VALUE;
-				while (scenes.hasNext()) {
-					final SimpleFeature scene = scenes.next();
-					final String entityId = scene.getID();
-					final int path = (int) scene.getAttribute("path");
-					final int row = (int) scene.getAttribute("row");
-					final String indexHtml = getDownloadIndexHtml(
-							entityId,
-							path,
-							row);
-					final List<String> htmlLines = IOUtils.readLines(new URL(
-							indexHtml).openStream());
-					final TreeMap<String, Double> entityBandIdToMbMap = new TreeMap<String, Double>();
-					System.out.println("Entity ID: " + entityId);
-					for (final String line : htmlLines) {
-						// read everything before the tif
-						int endIndex = line.indexOf(".TIF\"");
-						if (endIndex > 0) {
-							// read everything after the underscore
-							int beginIndex = line.indexOf("_") + 1;
-							final String bandId = line.substring(
-									beginIndex,
-									endIndex);
-							endIndex = line.indexOf("MB)");
-							// rather than match on a specific string for the
-							// beginning of the number, let's be flexible and
-							// match on several preceding characters and then
-							// strip out non-numerics
-							beginIndex = endIndex - 6;
-
-							String mbStr = line.substring(
-									beginIndex,
-									endIndex);
-							mbStr = mbStr.replaceAll(
-									"[^\\d.]",
-									"");
-							final double mb = Double.parseDouble(mbStr);
-							entityBandIdToMbMap.put(
+				int minRow = Integer.MAX_VALUE;
+				int minPath = Integer.MAX_VALUE;
+				int maxRow = Integer.MIN_VALUE;
+				int maxPath = Integer.MIN_VALUE;
+				double minLat = Double.MAX_VALUE;
+				double minLon = Double.MAX_VALUE;
+				double maxLat = -Double.MAX_VALUE;
+				double maxLon = -Double.MAX_VALUE;
+				String prevEntityId = null;
+				final TreeMap<String, Float> entityBandIdToMbMap = new TreeMap<String, Float>();
+				while (bands.hasNext()) {
+					final SimpleFeature band = bands.next();
+					final String entityId = (String) band.getAttribute(SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME);
+					if ((prevEntityId == null) || !prevEntityId.equals(entityId)) {
+						System.out.println("\n<--   " + prevEntityId + "   -->");
+						for (final Entry<String, Float> entry : entityBandIdToMbMap.entrySet()) {
+							final String bandId = entry.getKey();
+							final double mb = entry.getValue();
+							System.out.println("Band " + bandId + ": " + mb + " MB");
+							Double totalMb = bandIdToMbMap.get(bandId);
+							if (totalMb == null) {
+								totalMb = 0.0;
+							}
+							totalMb += mb;
+							bandIdToMbMap.put(
 									bandId,
-									mb);
-							wrs2Keys.add(new WRS2Key(
-									path,
-									row));
+									totalMb);
 						}
+						entityBandIdToMbMap.clear();
+						prevEntityId = entityId;
+						sceneCount++;
+						final int path = (int) band.getAttribute(SceneFeatureIterator.PATH_ATTRIBUTE_NAME);
+						final int row = (int) band.getAttribute(SceneFeatureIterator.ROW_ATTRIBUTE_NAME);
+						minRow = Math.min(
+								minRow,
+								row);
+						maxRow = Math.max(
+								maxRow,
+								row);
+						minPath = Math.min(
+								minPath,
+								path);
+						maxPath = Math.max(
+								maxPath,
+								path);
+						final Envelope env = ((Geometry) band.getDefaultGeometry()).getEnvelopeInternal();
+						minLat = Math.min(
+								minLat,
+								env.getMinY());
+						maxLat = Math.max(
+								maxLat,
+								env.getMaxY());
+						minLon = Math.min(
+								minLon,
+								env.getMinX());
+						maxLon = Math.max(
+								maxLon,
+								env.getMaxX());
+						wrs2Keys.add(new WRS2Key(
+								path,
+								row));
 					}
-
-					System.out.println("\n<--   " + entityId + "   -->");
-					for (final Entry<String, Double> entry : entityBandIdToMbMap.entrySet()) {
+					final String bandId = (String) band.getAttribute(BandFeatureIterator.BAND_ATTRIBUTE_NAME);
+					final float mb = (float) band.getAttribute(BandFeatureIterator.SIZE_ATTRIBUTE_NAME);
+					entityBandIdToMbMap.put(
+							bandId,
+							mb);
+				}
+				if (prevEntityId != null) {
+					System.out.println("\n<--   " + prevEntityId + "   -->");
+					for (final Entry<String, Float> entry : entityBandIdToMbMap.entrySet()) {
 						final String bandId = entry.getKey();
 						final double mb = entry.getValue();
 						System.out.println("Band " + bandId + ": " + mb + " MB");
@@ -136,21 +148,18 @@ public class Landsat8AnalyzeCLIDriver implements
 								bandId,
 								totalMb);
 					}
-					sceneCount++;
 				}
-
 				System.out.println("\n<--   Totals   -->");
-				System.out.println("Total Scenes: " + scenes);
+				System.out.println("Total Scenes: " + sceneCount);
 				System.out.println("WRS2 Path/Rows covered: " + wrs2Keys.size());
-				System.out.println("Row Range: " + wrs2Keys.size());
-				System.out.println("Path Range: " + wrs2Keys.size());
-				System.out.println("Latitude Range: " + wrs2Keys.size());
-				System.out.println("Longitude Range: " + wrs2Keys.size());
-				System.out.println("Longitude Range: " + wrs2Keys.size());
+				System.out.println("Row Range: [" + minRow + ", " + maxRow + "]");
+				System.out.println("Path Range: [" + minPath + ", " + maxPath + "]");
+				System.out.println("Latitude Range: [" + minLat + ", " + maxLat + "]");
+				System.out.println("Longitude Range: [" + minLon + ", " + maxLon + "]");
 				for (final Entry<String, Double> entry : bandIdToMbMap.entrySet()) {
 					final String bandId = entry.getKey();
 					final double mb = entry.getValue();
-					System.out.println("Band " + bandId + ": " + mb + " MB");
+					System.out.println("Band " + bandId + ": " + mb + " MB (avg. " + (mb / sceneCount) + ")");
 					Double totalMb = bandIdToMbMap.get(bandId);
 					if (totalMb == null) {
 						totalMb = 0.0;
@@ -167,23 +176,6 @@ public class Landsat8AnalyzeCLIDriver implements
 					"",
 					e);
 		}
-	}
-
-	protected String getDownloadPath(
-			final String entityId,
-			final int path,
-			final int row ) {
-		return DOWNLOAD_PREFIX + "/" + pathRowFormatter.format(path) + "/" + pathRowFormatter.format(row) + "/" + entityId;
-	}
-
-	protected String getDownloadIndexHtml(
-			final String entityId,
-			final int path,
-			final int row ) {
-		return getDownloadPath(
-				entityId,
-				path,
-				row) + "/index.html";
 	}
 
 	protected void parseOptionsInternal(
