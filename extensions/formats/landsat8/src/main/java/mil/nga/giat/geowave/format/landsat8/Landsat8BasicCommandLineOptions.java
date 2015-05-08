@@ -11,13 +11,12 @@ import org.opengis.filter.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Landsat8CommandLineOptions
+public class Landsat8BasicCommandLineOptions
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8CommandLineOptions.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8BasicCommandLineOptions.class);
 	private static final String DEFAULT_WORKSPACE_DIR = "landsat8";
 	private static final String WORKSPACE_DIR_OPTION = "wsdir";
 	private static final String CQL_FILTER_OPTION = "cql";
-	private static final String RETAIN_IMAGES_OPTION = "retainimages";
 	private static final String ONLY_SCENES_SINCE_LAST_RUN_OPTION = "sincelastrun";
 	private static final String USE_CACHED_SCENES_OPTION = "usecachedscenes";
 	private static final String N_BEST_SCENES = "nbestscenes";
@@ -29,7 +28,7 @@ public class Landsat8CommandLineOptions
 	private final boolean useCachedScenes;
 	private final int nBestScenes;
 
-	public Landsat8CommandLineOptions(
+	public Landsat8BasicCommandLineOptions(
 			final String workspaceDir,
 			final String cqlFilter,
 			final boolean retainImageFiles,
@@ -44,7 +43,7 @@ public class Landsat8CommandLineOptions
 		this.nBestScenes = nBestScenes;
 	}
 
-	public static Landsat8CommandLineOptions parseOptions(
+	public static Landsat8BasicCommandLineOptions parseOptions(
 			final CommandLine commandLine ) {
 		String workspaceDir;
 		if (commandLine.hasOption(WORKSPACE_DIR_OPTION)) {
@@ -68,10 +67,9 @@ public class Landsat8CommandLineOptions
 		else {
 			nBestScenes = -1;
 		}
-		final boolean retainImageFiles = commandLine.hasOption(RETAIN_IMAGES_OPTION);
 		final boolean onlyScenesSinceLastRun = commandLine.hasOption(ONLY_SCENES_SINCE_LAST_RUN_OPTION);
 		final boolean useCachedScenes = commandLine.hasOption(USE_CACHED_SCENES_OPTION);
-		return new Landsat8CommandLineOptions(
+		return new Landsat8BasicCommandLineOptions(
 				workspaceDir,
 				cqlFilter,
 				retainImageFiles,

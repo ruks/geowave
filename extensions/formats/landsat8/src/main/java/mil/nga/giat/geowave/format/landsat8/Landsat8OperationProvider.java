@@ -19,15 +19,10 @@ public class Landsat8OperationProvider implements
 				new Landsat8DownloadCLIDriver(
 						"downloadlandsat8")),
 		new CLIOperation(
-				"ingestlandsat8",
-				"Ingest routine for ingesting Landsat 8 imagery that has already been downloaded locally",
-				new Landsat8IngestCLIDriver(
-						"ingestlandsat8")),
-		new CLIOperation(
-				"downloadingestlandsat8",
-				"Ingest routine for downloading and ingesting Landsat 8 imagery publicly available on AWS",
-				new Landsat8IngestCLIDriver(
-						"downloadingestlandsat8")),
+				"localingestlandsat8",
+				"Ingest routine for locally downloading Landsat 8 imagery and ingesting it into GeoWave",
+				new Landsat8LocalIngestCLIDriver(
+						"localingestlandsat8")),
 	};
 
 	@Override

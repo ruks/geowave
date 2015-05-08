@@ -43,7 +43,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 public class SceneFeatureIterator implements
 		SimpleFeatureIterator
 {
-	private static class BestCloudCoverComparator implements
+	protected static class BestCloudCoverComparator implements
 			Comparator<SimpleFeature>
 	{
 
@@ -66,7 +66,7 @@ public class SceneFeatureIterator implements
 	protected static final String PROCESSING_LEVEL_ATTRIBUTE_NAME = "processingLevel";
 	protected static final String PATH_ATTRIBUTE_NAME = "path";
 	protected static final String ROW_ATTRIBUTE_NAME = "row";
-	protected static final String DOWNLOAD_ATTRIBUTE_NAME = "downloadUrl";
+	protected static final String SCENE_DOWNLOAD_ATTRIBUTE_NAME = "sceneDownloadUrl";
 	protected static final String ENTITY_ID_ATTRIBUTE_NAME = "entityId";
 
 	protected static final String[] SCENE_ATTRIBUTES = new String[] {
@@ -77,7 +77,7 @@ public class SceneFeatureIterator implements
 		PATH_ATTRIBUTE_NAME,
 		ROW_ATTRIBUTE_NAME,
 		ENTITY_ID_ATTRIBUTE_NAME,
-		DOWNLOAD_ATTRIBUTE_NAME
+		SCENE_DOWNLOAD_ATTRIBUTE_NAME
 	};
 	protected static SimpleDateFormat AQUISITION_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss.SSS");
@@ -243,7 +243,7 @@ public class SceneFeatureIterator implements
 				ROW_ATTRIBUTE_NAME,
 				Integer.class);
 		typeBuilder.add(
-				DOWNLOAD_ATTRIBUTE_NAME,
+				SCENE_DOWNLOAD_ATTRIBUTE_NAME,
 				String.class);
 		type = typeBuilder.buildFeatureType();
 		setupCsvToFeatureIterator(
@@ -268,19 +268,32 @@ public class SceneFeatureIterator implements
 				}
 			}
 			if (!skipBestScenes) {
-				final MinMaxPriorityQueue<SimpleFeature> bestScenes = MinMaxPriorityQueue.orderedBy(
-						new BestCloudCoverComparator()).maximumSize(
-						nBestScenes).create();
-				// iterate once through the scenes, saving the best entity IDs
-				// based on cloud cover
-
-				while (hasNext()) {
-					bestScenes.offer(next());
-				}
-				close();
-				iterator = bestScenes.iterator();
+				nBestScenes(nBestScenes);
 			}
 		}
+	}
+
+	private void nBestScenes(
+			final int n ) {
+		iterator = nBestScenes(
+				this,
+				n);
+	}
+
+	protected static Iterator<SimpleFeature> nBestScenes(
+			final SimpleFeatureIterator iterator,
+			final int n ) {
+		final MinMaxPriorityQueue<SimpleFeature> bestScenes = MinMaxPriorityQueue.orderedBy(
+				new BestCloudCoverComparator()).maximumSize(
+				n).create();
+		// iterate once through the scenes, saving the best entity IDs
+		// based on cloud cover
+
+		while (iterator.hasNext()) {
+			bestScenes.offer(iterator.next());
+		}
+		iterator.close();
+		return bestScenes.iterator();
 	}
 
 	private void setupCsvToFeatureIterator(

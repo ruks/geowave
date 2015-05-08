@@ -27,9 +27,9 @@ import com.vividsolutions.jts.geom.Geometry;
 public class Landsat8AnalyzeCLIDriver implements
 		CLIOperationDriver
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8IngestCLIDriver.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8AnalyzeCLIDriver.class);
 	private final String operation;
-	private Landsat8CommandLineOptions landsatOptions;
+	protected Landsat8BasicCommandLineOptions landsatOptions;
 
 	public Landsat8AnalyzeCLIDriver(
 			final String operation ) {
@@ -66,19 +66,19 @@ public class Landsat8AnalyzeCLIDriver implements
 					landsatOptions.getCqlFilter(),
 					landsatOptions.getWorkspaceDir())) {
 				final AnalysisInfo info = new AnalysisInfo();
+				String prevEntityId = null;
 				while (bands.hasNext()) {
 					final SimpleFeature band = bands.next();
 					final String entityId = (String) band.getAttribute(SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME);
-					if (info.isNextScene(entityId)) {
-						info.nextScene(
-								entityId,
-								band);
+					if ((prevEntityId == null) || !prevEntityId.equals(entityId)) {
+						prevEntityId = entityId;
+						nextScene(
+								band,
+								info);
 					}
-					final String bandId = (String) band.getAttribute(BandFeatureIterator.BAND_ATTRIBUTE_NAME);
-					final float mb = (float) band.getAttribute(BandFeatureIterator.SIZE_ATTRIBUTE_NAME);
-					info.addBandInfo(
-							bandId,
-							mb);
+					nextBand(
+							band,
+							info);
 				}
 				info.printSceneInfo();
 				info.printTotals();
@@ -91,21 +91,38 @@ public class Landsat8AnalyzeCLIDriver implements
 		}
 	}
 
+	protected void nextScene(
+			final SimpleFeature firstBandOfScene,
+			final AnalysisInfo analysisInfo ) {
+		analysisInfo.nextScene(firstBandOfScene);
+	}
+
+	protected void nextBand(
+			final SimpleFeature band,
+			final AnalysisInfo analysisInfo ) {
+		analysisInfo.addBandInfo(band);
+	}
+
+	protected void lastSceneComplete(
+			final AnalysisInfo analysisInfo ) {
+		analysisInfo.printSceneInfo();
+	}
+
 	protected void parseOptionsInternal(
 			final CommandLine commandLine )
 			throws ParseException {
-		landsatOptions = Landsat8CommandLineOptions.parseOptions(commandLine);
+		landsatOptions = Landsat8BasicCommandLineOptions.parseOptions(commandLine);
 	}
 
 	protected void applyOptionsInternal(
 			final Options allOptions ) {
-		Landsat8CommandLineOptions.applyOptions(allOptions);
+		Landsat8BasicCommandLineOptions.applyOptions(allOptions);
 	}
 
-	private static class AnalysisInfo
+	protected static class AnalysisInfo
 	{
 		private final TreeMap<String, Float> bandIdToMbMap = new TreeMap<String, Float>();
-		private final TreeMap<String, Float> entityBandIdToMbMap = new TreeMap<String, Float>();
+		private final TreeMap<String, SimpleFeature> entityBandIdToSimpleFeatureMap = new TreeMap<String, SimpleFeature>();
 		private int sceneCount = 0;
 		private final Set<WRS2Key> wrs2Keys = new HashSet<WRS2Key>();
 		private int minRow = Integer.MAX_VALUE;
@@ -116,10 +133,6 @@ public class Landsat8AnalyzeCLIDriver implements
 		private double minLon = Double.MAX_VALUE;
 		private double maxLat = -Double.MAX_VALUE;
 		private double maxLon = -Double.MAX_VALUE;
-		private String prevEntityId = null;
-		private String prevDownloadUrl = null;
-		private Date prevDate = null;
-		private float prevCloudCover = 0f;
 		private long startDate = Long.MAX_VALUE;
 		private long endDate = 0;
 		private float totalCloudCover = 0f;
@@ -127,23 +140,16 @@ public class Landsat8AnalyzeCLIDriver implements
 		private float maxCloudCover = -Float.MAX_VALUE;
 		private final Map<String, Integer> processingLevelCounts = new HashMap<String, Integer>();
 
-		private boolean isNextScene(
-				final String entityId ) {
-			return (prevEntityId == null) || !prevEntityId.equals(entityId);
-		}
-
 		private void nextScene(
-				final String entityId,
 				final SimpleFeature currentBand ) {
 			printSceneInfo();
-			entityBandIdToMbMap.clear();
-			prevEntityId = entityId;
+			sceneCount++;
+			entityBandIdToSimpleFeatureMap.clear();
 			final int path = (int) currentBand.getAttribute(SceneFeatureIterator.PATH_ATTRIBUTE_NAME);
 			final int row = (int) currentBand.getAttribute(SceneFeatureIterator.ROW_ATTRIBUTE_NAME);
 			final float cloudCover = (float) currentBand.getAttribute(SceneFeatureIterator.CLOUD_COVER_ATTRIBUTE_NAME);
 			final String processingLevel = (String) currentBand.getAttribute(SceneFeatureIterator.PROCESSING_LEVEL_ATTRIBUTE_NAME);
 			final Date date = (Date) currentBand.getAttribute(SceneFeatureIterator.ACQUISITION_DATE_ATTRIBUTE_NAME);
-			prevDownloadUrl = (String) currentBand.getAttribute(SceneFeatureIterator.DOWNLOAD_ATTRIBUTE_NAME);
 			minRow = Math.min(
 					minRow,
 					row);
@@ -177,7 +183,6 @@ public class Landsat8AnalyzeCLIDriver implements
 					maxCloudCover,
 					cloudCover);
 			totalCloudCover += cloudCover;
-			prevCloudCover = cloudCover;
 
 			Integer count = processingLevelCounts.get(processingLevel);
 			if (count == null) {
@@ -194,7 +199,6 @@ public class Landsat8AnalyzeCLIDriver implements
 			endDate = Math.max(
 					endDate,
 					date.getTime());
-			prevDate = date;
 			wrs2Keys.add(new WRS2Key(
 					path,
 					row));
@@ -202,16 +206,23 @@ public class Landsat8AnalyzeCLIDriver implements
 		}
 
 		private void printSceneInfo() {
-			if (prevEntityId != null) {
-				sceneCount++;
-				System.out.println("\n<--   " + prevEntityId + "   -->");
-				System.out.println("Acquisition Date: " + SceneFeatureIterator.AQUISITION_DATE_FORMAT.format(prevDate));
-				System.out.println("Cloud Cover: " + prevCloudCover);
-				System.out.println("Download URL: " + prevDownloadUrl);
-				for (final Entry<String, Float> entry : entityBandIdToMbMap.entrySet()) {
+			if (sceneCount > 0) {
+				boolean first = true;
+				for (final Entry<String, SimpleFeature> entry : entityBandIdToSimpleFeatureMap.entrySet()) {
 					final String bandId = entry.getKey();
-					final float mb = entry.getValue();
-					System.out.println("Band " + bandId + ": " + mb + " MB");
+					final SimpleFeature feature = entry.getValue();
+					if (first) {
+						// print scene info
+						System.out.println("\n<--   " + feature.getAttribute(SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME) + "   -->");
+						System.out.println("Acquisition Date: " + SceneFeatureIterator.AQUISITION_DATE_FORMAT.format(feature.getAttribute(SceneFeatureIterator.ACQUISITION_DATE_ATTRIBUTE_NAME)));
+						System.out.println("Cloud Cover: " + feature.getAttribute(SceneFeatureIterator.CLOUD_COVER_ATTRIBUTE_NAME));
+						System.out.println("Scene Download URL: " + feature.getAttribute(SceneFeatureIterator.SCENE_DOWNLOAD_ATTRIBUTE_NAME));
+						first = false;
+					}
+					final float mb = (Float) feature.getAttribute(BandFeatureIterator.SIZE_ATTRIBUTE_NAME);
+					final String bandDownloadUrl = (String) feature.getAttribute(BandFeatureIterator.BAND_DOWNLOAD_ATTRIBUTE_NAME);
+					// print band info
+					System.out.println("Band " + bandId + ": " + mb + " MB, download at " + bandDownloadUrl);
 					Float totalMb = bandIdToMbMap.get(bandId);
 					if (totalMb == null) {
 						totalMb = 0.0f;
@@ -225,11 +236,10 @@ public class Landsat8AnalyzeCLIDriver implements
 		}
 
 		private void addBandInfo(
-				final String bandId,
-				final float mb ) {
-			entityBandIdToMbMap.put(
-					bandId,
-					mb);
+				final SimpleFeature band ) {
+			entityBandIdToSimpleFeatureMap.put(
+					(String) band.getAttribute(BandFeatureIterator.BAND_ATTRIBUTE_NAME),
+					band);
 		}
 
 		private void printTotals() {

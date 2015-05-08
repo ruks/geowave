@@ -66,9 +66,9 @@ import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatist
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
+import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy.SubStrategy;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
-import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy.SubStrategy;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
@@ -98,7 +98,6 @@ import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.IteratorSetting.Column;
 import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.math.util.MathUtils;
 import org.apache.log4j.Logger;
 import org.geotools.coverage.Category;
@@ -110,7 +109,6 @@ import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.processing.Operations;
-import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.geometry.jts.GeometryClipper;
 import org.geotools.geometry.jts.JTS;
@@ -155,6 +153,7 @@ public class RasterDataAdapter implements
 			"image");
 	private final static int DEFAULT_TILE_SIZE = 256;
 	private final static boolean DEFAULT_BUILD_PYRAMID = false;
+	private final static boolean DEFAULT_BUILD_HISTOGRAM = true;
 	private static Operations resampleOperations;
 
 	/**
@@ -195,6 +194,7 @@ public class RasterDataAdapter implements
 				originalGridCoverage,
 				DEFAULT_TILE_SIZE,
 				DEFAULT_BUILD_PYRAMID,
+				DEFAULT_BUILD_HISTOGRAM,
 				new NoDataMergeStrategy());
 	}
 
@@ -204,6 +204,7 @@ public class RasterDataAdapter implements
 			final GridCoverage2D originalGridCoverage,
 			final int tileSize,
 			final boolean buildPyramid,
+			final boolean buildHistogram,
 			final RasterTileMergeStrategy<?> mergeStrategy ) {
 		final RenderedImage img = originalGridCoverage.getRenderedImage();
 		sampleModel = img.getSampleModel();
@@ -211,8 +212,13 @@ public class RasterDataAdapter implements
 		this.metadata = metadata;
 		this.coverageName = coverageName;
 		this.tileSize = tileSize;
-		histogramConfig = new HistogramConfig(
-				sampleModel);
+		if (buildHistogram) {
+			histogramConfig = new HistogramConfig(
+					sampleModel);
+		}
+		else {
+			histogramConfig = null;
+		}
 		noDataValuesPerBand = new double[originalGridCoverage.getNumSampleDimensions()][];
 		for (int d = 0; d < noDataValuesPerBand.length; d++) {
 			noDataValuesPerBand[d] = originalGridCoverage.getSampleDimension(
@@ -865,7 +871,7 @@ public class RasterDataAdapter implements
 	/**
 	 * This method is responsible for creating a coverage from the supplied
 	 * {@link RenderedImage}.
-	 * 
+	 *
 	 * @param image
 	 * @return
 	 * @throws IOException
@@ -1683,7 +1689,7 @@ public class RasterDataAdapter implements
 
 		@Override
 		public boolean equals(
-				Object obj ) {
+				final Object obj ) {
 			if (!(obj instanceof SimplifiedGridSampleDimension)) {
 				return false;
 			}
