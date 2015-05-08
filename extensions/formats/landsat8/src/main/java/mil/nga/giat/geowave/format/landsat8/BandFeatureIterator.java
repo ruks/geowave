@@ -13,7 +13,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.store.FeatureIteratorIterator;
-import org.geotools.data.store.ReTypingFeatureIterator;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -46,6 +45,7 @@ public class BandFeatureIterator implements
 	public BandFeatureIterator(
 			final boolean onlyScenesSinceLastRun,
 			final boolean useCachedScenes,
+			final int nBestScenes,
 			final Filter cqlFilter,
 			final String workspaceDir )
 			throws MalformedURLException,
@@ -54,6 +54,7 @@ public class BandFeatureIterator implements
 				new SceneFeatureIterator(
 						onlyScenesSinceLastRun,
 						useCachedScenes,
+						nBestScenes,
 						cqlFilter,
 						workspaceDir),
 				cqlFilter);
@@ -85,10 +86,7 @@ public class BandFeatureIterator implements
 
 		iterator = Iterators.concat(Iterators.transform(
 				new FeatureIteratorIterator<SimpleFeature>(
-						new ReTypingFeatureIterator(
-								sceneIterator,
-								sceneType,
-								bandType)),
+						sceneIterator),
 				new SceneToBandFeatureTransform(
 						bandType)));
 		if (cqlFilter != null) {
@@ -194,7 +192,11 @@ public class BandFeatureIterator implements
 								"[^\\d.]",
 								"");
 						final double mb = Double.parseDouble(sizeStr) / divisor;
-						featureBuilder.init(scene);
+						for (final String attributeName : SceneFeatureIterator.SCENE_ATTRIBUTES) {
+							featureBuilder.set(
+									attributeName,
+									scene.getAttribute(attributeName));
+						}
 						featureBuilder.set(
 								SIZE_ATTRIBUTE_NAME,
 								mb);

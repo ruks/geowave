@@ -20,24 +20,28 @@ public class Landsat8CommandLineOptions
 	private static final String RETAIN_IMAGES_OPTION = "retainimages";
 	private static final String ONLY_SCENES_SINCE_LAST_RUN_OPTION = "sincelastrun";
 	private static final String USE_CACHED_SCENES_OPTION = "usecachedscenes";
+	private static final String N_BEST_SCENES = "nbestscenes";
 
 	private final String workspaceDir;
 	private final String cqlFilter;
 	private final boolean retainImageFiles;
 	private final boolean onlyScenesSinceLastRun;
 	private final boolean useCachedScenes;
+	private final int nBestScenes;
 
 	public Landsat8CommandLineOptions(
 			final String workspaceDir,
 			final String cqlFilter,
 			final boolean retainImageFiles,
 			final boolean onlyScenesSinceLastRun,
-			final boolean useCachedScenes ) {
+			final boolean useCachedScenes,
+			final int nBestScenes ) {
 		this.workspaceDir = workspaceDir;
 		this.cqlFilter = cqlFilter;
 		this.retainImageFiles = retainImageFiles;
 		this.onlyScenesSinceLastRun = onlyScenesSinceLastRun;
 		this.useCachedScenes = useCachedScenes;
+		this.nBestScenes = nBestScenes;
 	}
 
 	public static Landsat8CommandLineOptions parseOptions(
@@ -56,6 +60,14 @@ public class Landsat8CommandLineOptions
 		else {
 			cqlFilter = null;
 		}
+
+		final int nBestScenes;
+		if (commandLine.hasOption(N_BEST_SCENES)) {
+			nBestScenes = Integer.parseInt(commandLine.getOptionValue(N_BEST_SCENES));
+		}
+		else {
+			nBestScenes = -1;
+		}
 		final boolean retainImageFiles = commandLine.hasOption(RETAIN_IMAGES_OPTION);
 		final boolean onlyScenesSinceLastRun = commandLine.hasOption(ONLY_SCENES_SINCE_LAST_RUN_OPTION);
 		final boolean useCachedScenes = commandLine.hasOption(USE_CACHED_SCENES_OPTION);
@@ -64,7 +76,8 @@ public class Landsat8CommandLineOptions
 				cqlFilter,
 				retainImageFiles,
 				onlyScenesSinceLastRun,
-				useCachedScenes);
+				useCachedScenes,
+				nBestScenes);
 	}
 
 	public static void applyOptions(
@@ -75,12 +88,20 @@ public class Landsat8CommandLineOptions
 				"A local directory to write temporary files needed for landsat 8 ingest. Default is <TEMP_DIR>/landsat8");
 		workspaceDir.setRequired(false);
 		allOptions.addOption(workspaceDir);
+
 		final Option cqlFilter = new Option(
 				CQL_FILTER_OPTION,
 				true,
 				"An optional CQL expression to filter the ingested imagery. The feature type for the expression has the following attributes: shape (Geometry), acquisitionDate (Date), cloudCover (double), processingLevel (String), path (int), row (int) and the feature ID is entityId for the scene");
 		cqlFilter.setRequired(false);
 		allOptions.addOption(cqlFilter);
+
+		final Option nBestScenes = new Option(
+				N_BEST_SCENES,
+				true,
+				"An option to identify and only use a set number of scenes with the best cloud cover");
+		nBestScenes.setRequired(false);
+		allOptions.addOption(nBestScenes);
 
 		final Option retainImageFiles = new Option(
 				RETAIN_IMAGES_OPTION,
@@ -96,12 +117,12 @@ public class Landsat8CommandLineOptions
 		onlyScenesSinceLastRun.setRequired(false);
 		allOptions.addOption(onlyScenesSinceLastRun);
 
-		final Option offline = new Option(
+		final Option useCachedScenes = new Option(
 				USE_CACHED_SCENES_OPTION,
 				false,
 				"An option to run against the existing scenes catalog in the workspace directory if it exists.");
-		offline.setRequired(false);
-		allOptions.addOption(offline);
+		useCachedScenes.setRequired(false);
+		allOptions.addOption(useCachedScenes);
 	}
 
 	public String getWorkspaceDir() {
@@ -137,5 +158,9 @@ public class Landsat8CommandLineOptions
 
 	public boolean isOnlyScenesSinceLastRun() {
 		return onlyScenesSinceLastRun;
+	}
+
+	public int getNBestScenes() {
+		return nBestScenes;
 	}
 }
