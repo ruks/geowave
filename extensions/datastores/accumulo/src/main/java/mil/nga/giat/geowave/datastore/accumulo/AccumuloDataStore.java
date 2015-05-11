@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
@@ -72,6 +72,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.Iterators;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * This is the Accumulo implementation of the data store. It requires an
@@ -998,6 +1000,7 @@ public class AccumuloDataStore implements
 					adapterStore,
 					limit,
 					scanCallback,
+					null,
 					authorizations);
 		}
 		catch (final IOException e) {
@@ -1021,6 +1024,7 @@ public class AccumuloDataStore implements
 			final AdapterStore adapterStore,
 			final Integer limit,
 			final ScanCallback<?> scanCallback,
+			final Collection<String> attributes,
 			final String... authorizations ) {
 		// query the indices that are supported for this query object, and these
 		// data adapter Ids
@@ -1054,6 +1058,10 @@ public class AccumuloDataStore implements
 			}
 			else {
 				continue;
+			}
+			if ((attributes != null) && (!attributes.isEmpty())) {
+				// results should contain subset of attributes
+				accumuloQuery.setAttributes(attributes);
 			}
 			results.add(accumuloQuery.query(
 					accumuloOperations,
@@ -1095,7 +1103,20 @@ public class AccumuloDataStore implements
 		return query(
 				index,
 				query,
+				null,
 				null);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> query(
+			Index index,
+			Collection<String> attributes,
+			Query query ) {
+		return query(
+				index,
+				query,
+				null,
+				attributes);
 	}
 
 	@Override
@@ -1106,7 +1127,8 @@ public class AccumuloDataStore implements
 		return query(
 				index,
 				query,
-				(Integer) limit);
+				(Integer) limit,
+				null);
 	}
 
 	@Override
@@ -1123,7 +1145,8 @@ public class AccumuloDataStore implements
 	private <T> CloseableIterator<T> query(
 			final Index index,
 			final Query query,
-			final Integer limit ) {
+			final Integer limit,
+			Collection<String> attributes ) {
 		if ((query != null) && !query.isSupported(index)) {
 			throw new IllegalArgumentException(
 					"Index does not support the query");
@@ -1138,6 +1161,8 @@ public class AccumuloDataStore implements
 								}).iterator()),
 				adapterStore,
 				limit,
+				null,
+				attributes,
 				null);
 	}
 
@@ -1199,6 +1224,7 @@ public class AccumuloDataStore implements
 						}),
 				limit,
 				scanCallback,
+				null,
 				authorizations);
 	}
 
