@@ -151,7 +151,7 @@ public class RasterDataAdapter implements
 	private final static Logger LOGGER = Logger.getLogger(RasterDataAdapter.class);
 	private final static ByteArrayId DATA_FIELD_ID = new ByteArrayId(
 			"image");
-	private final static int DEFAULT_TILE_SIZE = 256;
+	public final static int DEFAULT_TILE_SIZE = 256;
 	private final static boolean DEFAULT_BUILD_PYRAMID = false;
 	private final static boolean DEFAULT_BUILD_HISTOGRAM = true;
 	private static Operations resampleOperations;

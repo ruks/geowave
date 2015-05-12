@@ -12,12 +12,10 @@ public class Landsat8IngestCommandLineOptions
 	private static final String COVERAGE_NAME_OPTION = "coveragename";
 	private static final String CREATE_HISTOGRAM_OPTION = "histogram";
 	private static final String CREATE_PYRAMID_OPTION = "pyramid";
-	private static final String COVERAGE_PER_BAND_OPTION = "coverageperband";
 	private static final String RETAIN_IMAGES_OPTION = "retainimages";
 	private static final String TILE_SIZE_OPTION = "tilesize";
 	private final boolean createHistogram;
 	private final boolean createPyramid;
-	private final boolean coveragePerBand;
 	private final boolean retainImages;
 	private final int tileSize;
 	private final String coverageName;
@@ -26,13 +24,11 @@ public class Landsat8IngestCommandLineOptions
 			final String coverageName,
 			final boolean createHistogram,
 			final boolean createPyramid,
-			final boolean coveragePerBand,
 			final boolean retainImages,
 			final int tileSize ) {
 		this.coverageName = coverageName;
 		this.createHistogram = createHistogram;
 		this.createPyramid = createPyramid;
-		this.coveragePerBand = coveragePerBand;
 		this.retainImages = retainImages;
 		this.tileSize = tileSize;
 	}
@@ -48,21 +44,20 @@ public class Landsat8IngestCommandLineOptions
 		}
 		final boolean createHistogram = commandLine.hasOption(CREATE_HISTOGRAM_OPTION);
 		final boolean createPyramid = commandLine.hasOption(CREATE_PYRAMID_OPTION);
-		final boolean coveragePerBand = commandLine.hasOption(COVERAGE_PER_BAND_OPTION);
 		final boolean retainImageFiles = commandLine.hasOption(RETAIN_IMAGES_OPTION);
 		final int tileSize;
 		if (commandLine.hasOption(TILE_SIZE_OPTION)) {
 			tileSize = Integer.parseInt(commandLine.getOptionValue(TILE_SIZE_OPTION));
 		}
 		else {
-			tileSize = RasterDataAdapter.
+			tileSize = RasterDataAdapter.DEFAULT_TILE_SIZE;
 		}
 		return new Landsat8IngestCommandLineOptions(
 				coverageName,
 				createHistogram,
 				createPyramid,
-				coveragePerBand,
-				retainImageFiles,tileSize);
+				retainImageFiles,
+				tileSize);
 	}
 
 	public static void applyOptions(
@@ -88,19 +83,19 @@ public class Landsat8IngestCommandLineOptions
 		createPyramid.setRequired(false);
 		allOptions.addOption(createPyramid);
 
-		final Option coveragePerBand = new Option(
-				COVERAGE_PER_BAND_OPTION,
-				false,
-				"An option to isolate each coverage per band.  The default behavior will be to merge all the bands of a scene into a single coverage");
-		coveragePerBand.setRequired(false);
-		allOptions.addOption(coveragePerBand);
-
 		final Option retainImageFiles = new Option(
 				RETAIN_IMAGES_OPTION,
 				false,
 				"An option to keep the images that are ingested in the local workspace directory.  By default it will delete the local file after it is ingested successfully.");
 		retainImageFiles.setRequired(false);
 		allOptions.addOption(retainImageFiles);
+
+		final Option tileSize = new Option(
+				TILE_SIZE_OPTION,
+				true,
+				"The option to set the pixel size for each tile stored in GeoWave. The default is " + RasterDataAdapter.DEFAULT_TILE_SIZE);
+		tileSize.setRequired(false);
+		allOptions.addOption(tileSize);
 	}
 
 	public boolean isCreateHistogram() {
@@ -111,15 +106,15 @@ public class Landsat8IngestCommandLineOptions
 		return createPyramid;
 	}
 
-	public boolean isCoveragePerBand() {
-		return coveragePerBand;
-	}
-
 	public boolean isRetainImages() {
 		return retainImages;
 	}
 
 	public String getCoverageName() {
 		return coverageName;
+	}
+
+	public int getTileSize() {
+		return tileSize;
 	}
 }

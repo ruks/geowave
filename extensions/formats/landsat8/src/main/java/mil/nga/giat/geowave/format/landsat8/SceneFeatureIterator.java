@@ -88,7 +88,6 @@ public class SceneFeatureIterator implements
 	private CSVParser parser;
 	private Iterator<SimpleFeature> iterator;
 	private SimpleFeatureType type;
-	private CqlFilterPredicate filterPredicate;
 
 	public SceneFeatureIterator(
 			final boolean onlyScenesSinceLastRun,
@@ -108,13 +107,6 @@ public class SceneFeatureIterator implements
 				new WRS2GeometryStore(
 						workspaceDir),
 				cqlFilter);
-	}
-
-	public void setFilterEnabled(
-			final boolean enabled ) {
-		if (filterPredicate != null) {
-			filterPredicate.setEnabled(enabled);
-		}
 	}
 
 	private void init(
@@ -252,25 +244,31 @@ public class SceneFeatureIterator implements
 				geometryStore,
 				cqlFilter);
 		if (nBestScenes > 0) {
-			final String[] attributes = DataUtilities.attributeNames(
-					cqlFilter,
-					type);
 			// rely on best scene aggregation at a higher level if the filter is
 			// using attributes not contained in the scene
 
-			boolean skipBestScenes = false;
-			for (final String attr : attributes) {
-				if (!ArrayUtils.contains(
-						SCENE_ATTRIBUTES,
-						attr)) {
-					skipBestScenes = true;
-					break;
-				}
-			}
-			if (!skipBestScenes) {
+			if (!hasOtherProperties(cqlFilter)) {
 				nBestScenes(nBestScenes);
 			}
+			else {
+				LOGGER.warn("Applying N best scene calculation using band metadata in the filter can be slow - band metadata must be applied to every scene.");
+			}
 		}
+	}
+
+	private boolean hasOtherProperties(
+			final Filter cqlFilter ) {
+		final String[] attributes = DataUtilities.attributeNames(
+				cqlFilter,
+				type);
+		for (final String attr : attributes) {
+			if (!ArrayUtils.contains(
+					SCENE_ATTRIBUTES,
+					attr)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void nBestScenes(
@@ -323,8 +321,20 @@ public class SceneFeatureIterator implements
 						geometryStore,
 						type));
 		if (cqlFilter != null) {
-			filterPredicate = new CqlFilterPredicate(
-					cqlFilter);
+			Filter actualFilter;
+			if (hasOtherProperties(cqlFilter)) {
+				final PropertyIgnoringFilterVisitor visitor = new PropertyIgnoringFilterVisitor(
+						SCENE_ATTRIBUTES,
+						type);
+				actualFilter = (Filter) cqlFilter.accept(
+						visitor,
+						null);
+			}
+			else {
+				actualFilter = cqlFilter;
+			}
+			final CqlFilterPredicate filterPredicate = new CqlFilterPredicate(
+					actualFilter);
 			iterator = Iterators.filter(
 					iterator,
 					filterPredicate);
@@ -426,7 +436,6 @@ public class SceneFeatureIterator implements
 			Predicate<SimpleFeature>
 	{
 		private final Filter cqlFilter;
-		private boolean enabled = true;
 
 		public CqlFilterPredicate(
 				final Filter cqlFilter ) {
@@ -436,15 +445,7 @@ public class SceneFeatureIterator implements
 		@Override
 		public boolean apply(
 				final SimpleFeature input ) {
-			if (!enabled) {
-				return true;
-			}
 			return cqlFilter.evaluate(input);
-		}
-
-		public void setEnabled(
-				final boolean enabled ) {
-			this.enabled = enabled;
 		}
 
 	}

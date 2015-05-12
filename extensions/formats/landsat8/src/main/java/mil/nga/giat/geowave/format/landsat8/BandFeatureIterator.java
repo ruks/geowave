@@ -112,9 +112,6 @@ public class BandFeatureIterator implements
 					SIZE_ATTRIBUTE_NAME) || ArrayUtils.contains(
 					attributes,
 					BAND_DOWNLOAD_ATTRIBUTE_NAME)) {
-				// disable filtering in the scene iterator if the attributes
-				// used are only in the bands
-				sceneIterator.setFilterEnabled(false);
 				// and rely on the band filter
 				iterator = Iterators.filter(
 						iterator,

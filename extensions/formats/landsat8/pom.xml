@@ -13,6 +13,11 @@
 	<description>GeoWave support for public LandSat8 data</description>
 	<dependencies>
 		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-imageio-ext-gdal</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-adapter-raster</artifactId>
 			<version>${project.version}</version>
@@ -22,7 +27,7 @@
 			<artifactId>geowave-core-ingest</artifactId>
 			<version>${project.version}</version>
 		</dependency>
- 		<dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.1</version>

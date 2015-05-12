@@ -23,7 +23,6 @@ public class Landsat8BasicCommandLineOptions
 
 	private final String workspaceDir;
 	private final String cqlFilter;
-	private final boolean retainImageFiles;
 	private final boolean onlyScenesSinceLastRun;
 	private final boolean useCachedScenes;
 	private final int nBestScenes;
@@ -31,13 +30,11 @@ public class Landsat8BasicCommandLineOptions
 	public Landsat8BasicCommandLineOptions(
 			final String workspaceDir,
 			final String cqlFilter,
-			final boolean retainImageFiles,
 			final boolean onlyScenesSinceLastRun,
 			final boolean useCachedScenes,
 			final int nBestScenes ) {
 		this.workspaceDir = workspaceDir;
 		this.cqlFilter = cqlFilter;
-		this.retainImageFiles = retainImageFiles;
 		this.onlyScenesSinceLastRun = onlyScenesSinceLastRun;
 		this.useCachedScenes = useCachedScenes;
 		this.nBestScenes = nBestScenes;
@@ -72,7 +69,6 @@ public class Landsat8BasicCommandLineOptions
 		return new Landsat8BasicCommandLineOptions(
 				workspaceDir,
 				cqlFilter,
-				retainImageFiles,
 				onlyScenesSinceLastRun,
 				useCachedScenes,
 				nBestScenes);
@@ -100,13 +96,6 @@ public class Landsat8BasicCommandLineOptions
 				"An option to identify and only use a set number of scenes with the best cloud cover");
 		nBestScenes.setRequired(false);
 		allOptions.addOption(nBestScenes);
-
-		final Option retainImageFiles = new Option(
-				RETAIN_IMAGES_OPTION,
-				false,
-				"An option to keep the images that are ingested in the local workspace directory.  By default it will delete the local file after it is ingested successfully.");
-		retainImageFiles.setRequired(false);
-		allOptions.addOption(retainImageFiles);
 
 		final Option onlyScenesSinceLastRun = new Option(
 				ONLY_SCENES_SINCE_LAST_RUN_OPTION,
@@ -148,10 +137,6 @@ public class Landsat8BasicCommandLineOptions
 
 	public boolean isUseCachedScenes() {
 		return useCachedScenes;
-	}
-
-	public boolean isRetainImageFiles() {
-		return retainImageFiles;
 	}
 
 	public boolean isOnlyScenesSinceLastRun() {
