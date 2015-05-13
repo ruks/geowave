@@ -1,7 +1,7 @@
 package mil.nga.giat.geowave.format.landsat8;
 
 import java.awt.image.DataBuffer;
-import java.awt.image.PixelInterleavedSampleModel;
+import java.awt.image.MultiPixelPackedSampleModel;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
@@ -15,9 +15,15 @@ import java.util.Map;
 
 import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.nodata.NoDataMergeStrategy;
+import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.ingest.AccumuloCommandLineOptions;
+import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -55,34 +61,34 @@ public class Landsat8LocalIngestCLIDriver extends
 	@Override
 	protected void runInternal(
 			final String[] args ) {
-		// try {
-		// final DataStore geowaveDataStore = new AccumuloDataStore(
-		// accumuloOptions.getAccumuloOperations());
-		// final Index index = accumuloOptions.getIndex(new Index[] {
-		// IndexType.SPATIAL_RASTER.createDefaultIndex(),
-		// IndexType.SPATIAL_TEMPORAL_RASTER.createDefaultIndex()
-		// });
-		// writer = geowaveDataStore.createIndexWriter(index);
+		try {
+			final DataStore geowaveDataStore = new AccumuloDataStore(
+					accumuloOptions.getAccumuloOperations());
+			final Index index = accumuloOptions.getIndex(new Index[] {
+				IndexType.SPATIAL_RASTER.createDefaultIndex(),
+				IndexType.SPATIAL_TEMPORAL_RASTER.createDefaultIndex()
+			});
+			writer = geowaveDataStore.createIndexWriter(index);
 
-		super.runInternal(args);
-		// }
-		// catch (AccumuloException | AccumuloSecurityException e) {
-		// LOGGER.error(
-		// "Unable to connect to Accumulo",
-		// e);
-		// }
-		// finally {
-		// if (writer != null) {
-		// try {
-		// writer.close();
-		// }
-		// catch (final IOException e) {
-		// LOGGER.error(
-		// "Unable to close Accumulo writer",
-		// e);
-		// }
-		// }
-		// }
+			super.runInternal(args);
+		}
+		catch (AccumuloException | AccumuloSecurityException e) {
+			LOGGER.error(
+					"Unable to connect to Accumulo",
+					e);
+		}
+		finally {
+			if (writer != null) {
+				try {
+					writer.close();
+				}
+				catch (final IOException e) {
+					LOGGER.error(
+							"Unable to close Accumulo writer",
+							e);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -119,160 +125,111 @@ public class Landsat8LocalIngestCLIDriver extends
 			final GridCoverage2D coverage = reader.read(null);
 			// DataBuffer dataBuffer =
 			// coverage.getRenderedImage().getData().getDataBuffer();
-			final PixelInterleavedSampleModel sampleModel = (PixelInterleavedSampleModel) coverage.getRenderedImage().getData().getSampleModel();
+			// final PixelInterleavedSampleModel sampleModel =
+			// (PixelInterleavedSampleModel)
+			// coverage.getRenderedImage().getData().getSampleModel();
 			// for (dataBuffer.get)
+			final MultiPixelPackedSampleModel newSampleModel = new MultiPixelPackedSampleModel(
+					DataBuffer.TYPE_BYTE,
+					coverage.getRenderedImage().getWidth(),
+					coverage.getRenderedImage().getHeight(),
+					1);
 			final WritableRaster nextRaster = Raster.createWritableRaster(
-					new PixelInterleavedSampleModel(
-							DataBuffer.TYPE_BYTE,
-							sampleModel.getWidth(),
-							sampleModel.getHeight(),
-							sampleModel.getPixelStride(),
-							sampleModel.getScanlineStride(),
-							sampleModel.getBandOffsets()),
+					newSampleModel,
 					null);
-			RenderedImage image = coverage.getRenderedImage();
+			final RenderedImage image = coverage.getRenderedImage();
 
-			int singleBitMask = 0x0001;
-			int doubleBitMask = 0x0003;
-			long totalFill = 0;
-			long totalDroppedFrame = 0;
-			long totalTerrainOcclusion = 0;
+			// int singleBitMask = 0x0001;
+			final int doubleBitMask = 0x0003;
+			// int tripleBitMask = 0x0007;
+			// long totalFill = 0;
+			// long totalDroppedFrame = 0;
+			// long totalTerrainOcclusion = 0;
 
-			long totalUndeterminedWater = 0;
-			long totalNoWater = 0;
-			long totalMaybeWater = 0;
-			long totalYesWater = 0;
+			// long totalUndeterminedWater = 0;
+			// long totalNoWater = 0;
+			// long totalMaybeWater = 0;
+			// long totalYesWater = 0;
 
-			long totalUndeterminedVegetation = 0;
-			long totalNoVegetation = 0;
-			long totalYesVegetation = 0;
-			long totalMaybeVegetation = 0;
+			// long totalUndeterminedVegetation = 0;
+			// long totalNoVegetation = 0;
+			// long totalYesVegetation = 0;
+			// long totalMaybeVegetation = 0;
 
-			long totalUndeterminedSnowIce = 0;
-			long totalNoSnowIce = 0;
-			long totalMaybeSnowIce = 0;
-			long totalYesSnowIce = 0;
+			// long totalUndeterminedSnowIce = 0;
+			// long totalNoSnowIce = 0;
+			// long totalMaybeSnowIce = 0;
+			// long totalYesSnowIce = 0;
 
-			long totalUndeterminedCirrus = 0;
-			long totalNoCirrus = 0;
-			long totalMaybeCirrus = 0;
-			long totalYesCirrus = 0;
-
-			long totalUndeterminedClouds = 0;
-			long totalNoClouds = 0;
-			long totalMaybeClouds = 0;
-			long totalYesClouds = 0;
-			Raster data = image.getData();
+			// long none = 0;
+			//
+			// long totalUndeterminedCirrus = 0;
+			// long totalNoCirrus = 0;
+			// long totalMaybeCirrus = 0;
+			// long totalYesCirrus = 0;
+			//
+			// long totalUndeterminedClouds = 0;
+			// long totalNoClouds = 0;
+			// long totalMaybeClouds = 0;
+			// long totalYesClouds = 0;
+			final Raster data = image.getData();
 			for (int x = 0; x < data.getWidth(); x++) {
 				for (int y = 0; y < data.getHeight(); y++) {
-					int sample = data.getSample(
+					final int sample = data.getSample(
 							x,
 							y,
 							0);
-					if ((sample & singleBitMask) > 0) {
-						totalFill++;
-					}
-					if ((sample >> 1 & singleBitMask) > 0) {
-						totalDroppedFrame++;
-					}
-					if ((sample >> 2 & singleBitMask) > 0) {
-						totalTerrainOcclusion++;
-					}
-					if ((sample >> 4 & doubleBitMask) == 0) {
-						totalUndeterminedWater++;
-					}
-					if ((sample >> 4 & doubleBitMask) == 1) {
-						totalNoWater++;
-					}
-					if ((sample >> 4 & doubleBitMask) == 2) {
-						totalMaybeWater++;
-					}
-					if ((sample >> 4 & doubleBitMask) == 3) {
-						totalYesWater++;
-					}
-					if ((sample >> 8 & doubleBitMask) == 0) {
-						totalUndeterminedVegetation++;
-					}
-					if ((sample >> 8 & doubleBitMask) == 1) {
-						totalNoVegetation++;
-					}
-					if ((sample >> 8 & doubleBitMask) == 2) {
-						totalMaybeVegetation++;
-					}
-					if ((sample >> 8 & doubleBitMask) == 3) {
-						totalYesVegetation++;
-					}
-					if ((sample >> 10 & doubleBitMask) == 0) {
-						totalUndeterminedSnowIce++;
-					}
-					if ((sample >> 10 & doubleBitMask) == 1) {
-						totalNoSnowIce++;
-					}
-					if ((sample >> 10 & doubleBitMask) == 2) {
-						totalMaybeSnowIce++;
-					}
-					if ((sample >> 10 & doubleBitMask) == 3) {
-						totalYesSnowIce++;
-					}
-					if ((sample >> 12 & doubleBitMask) == 0) {
-						totalUndeterminedCirrus++;
-					}
-					if ((sample >> 12 & doubleBitMask) == 1) {
-						totalNoCirrus++;
-					}
-					if ((sample >> 12 & doubleBitMask) == 2) {
-						totalMaybeCirrus++;
-					}
-					if ((sample >> 12 & doubleBitMask) == 3) {
-						totalYesCirrus++;
-					}
-					if ((sample >> 14 & doubleBitMask) == 0) {
-						totalUndeterminedClouds++;
-					}
-					if ((sample >> 14 & doubleBitMask) == 1) {
-						totalNoClouds++;
-					}
-					if ((sample >> 14 & doubleBitMask) == 2) {
-						totalMaybeClouds++;
-					}
-					if ((sample >> 14 & doubleBitMask) == 3) {
-						totalYesClouds++;
-					}
+					// int r =0;
+					// int g = 0;
+					// int b =0;
+					// if ((sample & tripleBitMask) > 0) {
+					// sample =0;
+					// totalFill++;
+					// }else if ((sample >> 14 & doubleBitMask) == 3 || (sample
+					// >> 12 & doubleBitMask) == 3) {
+					// sample = 1;
+					// r=255;
+					// totalYesClouds++;
+					// }else if ((sample >> 10 & doubleBitMask) > 1) {
+					// // sample = 64;
+					// g = 255;
+					// totalYesSnowIce++;
+					// }
+					// else if ((sample >> 4 & doubleBitMask) > 1) {
+					// sample = 127;
+					// b = 255;
+					// totalYesWater++;
+					// }
+					// else {sample = 255;
+					// r =255;
+					// g =255;
+					// b=255;
+					// none++;
+					// }
 					nextRaster.setSample(
 							x,
 							y,
 							0,
-							sample);
+							(((sample >> 10) & doubleBitMask) > 1) ? 1 : 0);
 				}
 			}
-			long total = data.getHeight()*data.getWidth();
-			System.err.println("total fill: " + (double)totalFill/total);
-			System.err.println("total dropped: " + (double)totalDroppedFrame/total);
-			System.err.println("total terrain occlusion: " + (double)totalTerrainOcclusion/total);
-			System.err.println("total ud water: " + (double)totalUndeterminedWater/total);
-			System.err.println("total no water: " + (double)totalNoWater/total);
-			System.err.println("total maybe water: " + (double)totalMaybeWater/total);
-			System.err.println("total yes water: " + (double)totalYesWater/total);
-			System.err.println("total ud veg: " + (double)totalUndeterminedVegetation/total);
-			System.err.println("total no veg: " + (double)totalNoVegetation/total);
-			System.err.println("total maybe veg: " + (double)totalMaybeVegetation/total);
-			System.err.println("total yes veg: " + (double)totalYesVegetation/total);
-			System.err.println("total ud SnowIce: " + (double)totalUndeterminedSnowIce/total);
-			System.err.println("total no SnowIce: " + (double)totalNoSnowIce/total);
-			System.err.println("total maybe SnowIce: " + (double)totalMaybeSnowIce/total);
-			System.err.println("total yes SnowIce: " + (double)totalYesSnowIce/total);
-			System.err.println("total ud Cirrus: " + (double)totalUndeterminedCirrus/total);
-			System.err.println("total no Cirrus: " + (double)totalNoCirrus/total);
-			System.err.println("total maybe Cirrus: " + (double)totalMaybeCirrus/total);
-			System.err.println("total yes Cirrus: " + (double)totalYesCirrus/total);
-			System.err.println("total ud Clouds: " + (double)totalUndeterminedClouds/total);
-			System.err.println("total no Clouds: " + (double)totalNoClouds/total);
-			System.err.println("total maybe Clouds: " + (double)totalMaybeClouds/total);
-			System.err.println("total yes Clouds: " + (double)totalYesClouds/total);
-			new GridCoverageFactory().create(
+			final GridCoverage2D nextCov = new GridCoverageFactory().create(
 					coverageName,
 					nextRaster,
 					coverage.getEnvelope());
+			// BufferedImage writ = new BufferedImage(img.getColorModel(),
+			// nextRaster, img.getColorModel().isAlphaPremultiplied(), null);
+			// ImageIO.write(nextCov.getRenderedImage(), "jpg", new
+			// File("C:\\test\\test.jpg"));
+			// long total = data.getHeight()*data.getWidth();
+			// System.err.println("total fill: " + (double)totalFill/total);
+			// System.err.println("total yes water: " +
+			// (double)totalYesWater/total);
+			// System.err.println("total yes SnowIce: " +
+			// (double)totalYesSnowIce/total);
+			// System.err.println("total yes Clouds: " +
+			// (double)totalYesClouds/total);
+			// System.err.println("total none: " + (double)none/total);
 
 			if (coverage != null) {
 				final Map<String, String> metadata = new HashMap<String, String>();
@@ -289,14 +246,14 @@ public class Landsat8LocalIngestCLIDriver extends
 				final RasterDataAdapter adapter = new RasterDataAdapter(
 						coverageName,
 						metadata,
-						coverage,
+						nextCov,
 						ingestOptions.getTileSize(),
 						ingestOptions.isCreatePyramid(),
 						ingestOptions.isCreateHistogram(),
 						new NoDataMergeStrategy());
-				// writer.write(
-				// adapter,
-				// coverage);
+				writer.write(
+						adapter,
+						nextCov);
 			}
 			else {
 				LOGGER.error("Unable to ingest band " + band.getID() + "; cannot read geotiff '" + geotiffFile.getAbsolutePath() + "'");
