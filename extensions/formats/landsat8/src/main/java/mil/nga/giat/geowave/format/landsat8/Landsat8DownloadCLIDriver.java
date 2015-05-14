@@ -54,8 +54,8 @@ public class Landsat8DownloadCLIDriver extends
 		boolean success = false;
 		while (!success && (retry < DOWNLOAD_RETRY)) {
 			try {
-				if (retry > 0){
-					//wait for a second
+				if (retry > 0) {
+					// wait for a second
 					Thread.sleep(1000L);
 				}
 				in = new URL(

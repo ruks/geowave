@@ -9,8 +9,9 @@ public class SimplifyQABand
 			DataBuffer input ) {
 		return input;
 	}
-	
-	public SampleModel translate(SampleModel model){
+
+	public SampleModel translate(
+			SampleModel model ) {
 		return model;
 	}
 }

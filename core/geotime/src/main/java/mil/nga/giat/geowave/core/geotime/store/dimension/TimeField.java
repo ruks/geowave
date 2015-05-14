@@ -2,8 +2,8 @@ package mil.nga.giat.geowave.core.geotime.store.dimension;
 
 import java.nio.ByteBuffer;
 
-import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
@@ -61,6 +61,13 @@ public class TimeField implements
 		return new NumericRange(
 				0,
 				System.currentTimeMillis() + 1);
+	}
+
+	public TimeField(
+			final NumericDimensionDefinition baseDefinition ) {
+		this(
+				baseDefinition,
+				DEFAULT_FIELD_ID);
 	}
 
 	public TimeField(

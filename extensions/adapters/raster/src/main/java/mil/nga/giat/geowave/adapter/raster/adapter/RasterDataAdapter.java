@@ -195,6 +195,7 @@ public class RasterDataAdapter implements
 				DEFAULT_TILE_SIZE,
 				DEFAULT_BUILD_PYRAMID,
 				DEFAULT_BUILD_HISTOGRAM,
+				new double[originalGridCoverage.getNumSampleDimensions()][],
 				new NoDataMergeStrategy());
 	}
 
@@ -205,6 +206,7 @@ public class RasterDataAdapter implements
 			final int tileSize,
 			final boolean buildPyramid,
 			final boolean buildHistogram,
+			final double[][] noDataValuesPerBand,
 			final RasterTileMergeStrategy<?> mergeStrategy ) {
 		final RenderedImage img = originalGridCoverage.getRenderedImage();
 		sampleModel = img.getSampleModel();
@@ -219,7 +221,7 @@ public class RasterDataAdapter implements
 		else {
 			histogramConfig = null;
 		}
-		noDataValuesPerBand = new double[originalGridCoverage.getNumSampleDimensions()][];
+		this.noDataValuesPerBand = noDataValuesPerBand;
 		for (int d = 0; d < noDataValuesPerBand.length; d++) {
 			noDataValuesPerBand[d] = originalGridCoverage.getSampleDimension(
 					d).getNoDataValues();
@@ -871,7 +873,7 @@ public class RasterDataAdapter implements
 	/**
 	 * This method is responsible for creating a coverage from the supplied
 	 * {@link RenderedImage}.
-	 *
+	 * 
 	 * @param image
 	 * @return
 	 * @throws IOException

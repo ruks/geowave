@@ -16,11 +16,25 @@ import java.util.Map;
 import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.nodata.NoDataMergeStrategy;
 import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
+import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
+import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
+import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
+import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
+import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
+import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.ingest.AccumuloCommandLineOptions;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
+import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
+import mil.nga.giat.geowave.format.landsat8.index.Landsat8TemporalBinningStrategy;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -45,12 +59,18 @@ public class Landsat8LocalIngestCLIDriver extends
 		Landsat8DownloadCLIDriver
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(Landsat8LocalIngestCLIDriver.class);
+	private static final int LONGITUDE_BITS = 27;
+	private static final int LATITUDE_BITS = 27;
+	private static final int TIME_BITS = 8;
 
+	private static final int doubleBitMask = 0x0003;
+	private static final int tripleBitMask = 0x0007;
 	protected Landsat8IngestCommandLineOptions ingestOptions;
 	protected AccumuloCommandLineOptions accumuloOptions;
 	List<SimpleFeature> lastSceneBands = new ArrayList<SimpleFeature>();
 	private Template coverageNameTemplate;
 	private IndexWriter writer;
+	private final Map<String, RasterDataAdapter> adapterCache = new HashMap<String, RasterDataAdapter>();
 
 	public Landsat8LocalIngestCLIDriver(
 			final String operation ) {
@@ -64,9 +84,32 @@ public class Landsat8LocalIngestCLIDriver extends
 		try {
 			final DataStore geowaveDataStore = new AccumuloDataStore(
 					accumuloOptions.getAccumuloOperations());
+			final TimeDefinition timeDefinition = new TimeDefinition(
+					new Landsat8TemporalBinningStrategy());
 			final Index index = accumuloOptions.getIndex(new Index[] {
 				IndexType.SPATIAL_RASTER.createDefaultIndex(),
-				IndexType.SPATIAL_TEMPORAL_RASTER.createDefaultIndex()
+				new CustomIdIndex(
+						TieredSFCIndexFactory.createEqualIntervalPrecisionTieredStrategy(
+								new NumericDimensionDefinition[] {
+									new LatitudeDefinition(),
+									new LongitudeDefinition(),
+									timeDefinition
+								},
+								new int[] {
+									LONGITUDE_BITS,
+									LATITUDE_BITS,
+									TIME_BITS
+								},
+								SFCType.HILBERT),
+						new BasicIndexModel(
+								new DimensionField[] {
+									new LongitudeField(),
+									new LatitudeField(),
+									new TimeField(
+											timeDefinition)
+								}),
+						new ByteArrayId(
+								"SpatialTemporalLandsat8Index"))
 			});
 			writer = geowaveDataStore.createIndexWriter(index);
 
@@ -140,7 +183,7 @@ public class Landsat8LocalIngestCLIDriver extends
 			final RenderedImage image = coverage.getRenderedImage();
 
 			// int singleBitMask = 0x0001;
-			final int doubleBitMask = 0x0003;
+			// final int doubleBitMask = 0x0003;
 			// int tripleBitMask = 0x0007;
 			// long totalFill = 0;
 			// long totalDroppedFrame = 0;
@@ -175,10 +218,19 @@ public class Landsat8LocalIngestCLIDriver extends
 			final Raster data = image.getData();
 			for (int x = 0; x < data.getWidth(); x++) {
 				for (int y = 0; y < data.getHeight(); y++) {
-					final int sample = data.getSample(
+					int sample = getIceSample(
 							x,
 							y,
-							0);
+							data);
+					int radius = 1;
+					while ((sample < 0) && (radius < (data.getWidth() / 2))) {
+						sample = findNearestValue(
+								x,
+								y,
+								radius,
+								data);
+						radius++;
+					}
 					// int r =0;
 					// int g = 0;
 					// int b =0;
@@ -206,11 +258,15 @@ public class Landsat8LocalIngestCLIDriver extends
 					// b=255;
 					// none++;
 					// }
+					if (sample < 0) {
+						sample = 0;
+					}
 					nextRaster.setSample(
 							x,
 							y,
 							0,
-							(((sample >> 10) & doubleBitMask) > 1) ? 1 : 0);
+							sample);
+					// (((sample >> 10) & doubleBitMask) > 1) ? 1 : 0);
 				}
 			}
 			final GridCoverage2D nextCov = new GridCoverageFactory().create(
@@ -230,8 +286,9 @@ public class Landsat8LocalIngestCLIDriver extends
 			// System.err.println("total yes Clouds: " +
 			// (double)totalYesClouds/total);
 			// System.err.println("total none: " + (double)none/total);
+			RasterDataAdapter adapter = adapterCache.get(coverageName);
+			if (adapter == null) {
 
-			if (coverage != null) {
 				final Map<String, String> metadata = new HashMap<String, String>();
 				final String[] mdNames = reader.getMetadataNames(coverage.getName().toString());
 				if ((mdNames != null) && (mdNames.length > 0)) {
@@ -243,21 +300,26 @@ public class Landsat8LocalIngestCLIDriver extends
 										mdName));
 					}
 				}
-				final RasterDataAdapter adapter = new RasterDataAdapter(
+				adapter = new RasterDataAdapter(
 						coverageName,
 						metadata,
 						nextCov,
 						ingestOptions.getTileSize(),
 						ingestOptions.isCreatePyramid(),
 						ingestOptions.isCreateHistogram(),
+						new double[][] {
+							new double[] {
+								0
+							}
+						},
 						new NoDataMergeStrategy());
-				writer.write(
-						adapter,
-						nextCov);
+				adapterCache.put(
+						coverageName,
+						adapter);
 			}
-			else {
-				LOGGER.error("Unable to ingest band " + band.getID() + "; cannot read geotiff '" + geotiffFile.getAbsolutePath() + "'");
-			}
+			writer.write(
+					adapter,
+					nextCov);
 		}
 		catch (IOException | TemplateException e) {
 			LOGGER.error(
@@ -268,6 +330,111 @@ public class Landsat8LocalIngestCLIDriver extends
 		// else {
 		// lastSceneBands.add(band);
 		// }
+	}
+
+	public int findNearestValue(
+			final int x0,
+			final int y0,
+			final int radius,
+			final Raster data ) {
+		int x = radius;
+		int y = 0;
+		int decisionOver2 = 1 - x; // Decision criterion divided by 2 evaluated
+									// at x=r, y=0
+
+		while (x >= y) {
+			int sample = getIceSample(
+					y + x0,
+					x + y0,
+					data);
+			if (sample >= 0) {
+				return sample;
+			}
+			if (x != 0) {
+				sample = getIceSample(
+						-x + x0,
+						y + y0,
+						data);
+				if (sample >= 0) {
+					return sample;
+				}
+				sample = getIceSample(
+						y + x0,
+						-x + y0,
+						data);
+				if (sample >= 0) {
+					return sample;
+				}
+			}
+			if (y != 0) {
+				sample = getIceSample(
+						-y + x0,
+						x + y0,
+						data);
+				if (sample >= 0) {
+					return sample;
+				}
+				sample = getIceSample(
+						x + x0,
+						-y + y0,
+						data);
+				if (sample >= 0) {
+					return sample;
+				}
+
+				if (x != 0) {
+					sample = getIceSample(
+							-x + x0,
+							-y + y0,
+							data);
+					if (sample >= 0) {
+						return sample;
+					}
+					sample = getIceSample(
+							-y + x0,
+							-x + y0,
+							data);
+					if (sample >= 0) {
+						return sample;
+					}
+				}
+			}
+			y++;
+			if (decisionOver2 <= 0) {
+				decisionOver2 += (2 * y) + 1; // Change in decision criterion
+												// for
+												// y -> y+1
+			}
+			else {
+				x--;
+				decisionOver2 += (2 * (y - x)) + 1; // Change for y -> y+1, x ->
+													// x-1
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * returns -1 if the sample is not valid, returns 0 if the sample is no ice,
+	 * and return 1 if the sample is ice
+	 * 
+	 * @return
+	 */
+	private int getIceSample(
+			final int x,
+			final int y,
+			final Raster data ) {
+		final int sample = data.getSample(
+				x,
+				y,
+				0);
+		if ((sample & tripleBitMask) > 0) {
+			return -1;
+		}
+		else if ((((sample >> 14) & doubleBitMask) == 3) || (((sample >> 12) & doubleBitMask) == 3)) {
+			return -1;
+		}
+		return (((sample >> 10) & doubleBitMask) > 1) ? 1 : 0;
 	}
 
 	@Override

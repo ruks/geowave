@@ -76,7 +76,7 @@ public enum IndexType {
 		}
 
 		public static Index createSpatialTemporalRasterIndex() {
-			return IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
+			return IndexType.SPATIAL_TEMPORAL_RASTER.createDefaultIndex();
 		}
 	}
 }
