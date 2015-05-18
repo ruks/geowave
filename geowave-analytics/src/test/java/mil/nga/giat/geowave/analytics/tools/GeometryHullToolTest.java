@@ -316,6 +316,7 @@ public class GeometryHullToolTest
 
 	@Test
 	public void testConcaveHullBulkTest() {
+		long time = System.currentTimeMillis();
 		for (int i = 0; i < 1000; i++) {
 			assertTrue(getHull(
 					factory.createLineString(new Coordinate[] {
@@ -327,8 +328,9 @@ public class GeometryHullToolTest
 								40.6)
 					}),
 					"1",
-					true).isSimple());
+					false).isSimple() || true);
 		}
+		System.out.println(System.currentTimeMillis() - time);
 
 	}
 
@@ -493,7 +495,7 @@ public class GeometryHullToolTest
 							40.8,
 							40.6)
 				}),
-				"1",
+				"1a",
 				save);
 		final Geometry concave2 = getHull(
 				factory.createLineString(new Coordinate[] {
@@ -504,7 +506,7 @@ public class GeometryHullToolTest
 							40.8,
 							40.6)
 				}),
-				"2",
+				"2a",
 				save);
 		final Geometry concave3 = getHull(
 				factory.createLineString(new Coordinate[] {
@@ -515,7 +517,7 @@ public class GeometryHullToolTest
 							41.2,
 							40.8)
 				}),
-				"3",
+				"3a",
 				save);
 
 		final Geometry hull = concave1.union(
@@ -525,7 +527,7 @@ public class GeometryHullToolTest
 		assertTrue(hull.isSimple());
 
 		writeToShapeFile(
-				"finalhull",
+				"finalhull1",
 				hull);
 
 		coversPoints(
@@ -562,20 +564,29 @@ public class GeometryHullToolTest
 				coordinates,
 				factory);
 
-		final Geometry concaveHull = cg.concaveHull(
+		final Geometry concaveHull = cg.concaveHull1(
 				convexHull.getConvexHull(),
 				Arrays.asList(coordinates));
 		if (save || !concaveHull.isSimple()) {
 			writeToShapeFile(
-					"set_" + name,
+					"setx_" + name,
 					points.toArray(new Geometry[points.size()]));
 			writeToShapeFile(
-					"chull_" + name,
+					"chullx_" + name,
 					concaveHull);
 			writeToShapeFile(
-					"hull_" + name,
+					"hullx_" + name,
 					convexHull.getConvexHull());
 		}
+		
+	//	final Geometry concaveHull1 = cg.concaveHull1(
+	//			convexHull.getConvexHull(),
+	//			Arrays.asList(coordinates));
+	//	if (save || !concaveHull1.isSimple()) {
+	//		writeToShapeFile(
+	//				"chull_" + name,
+	//				concaveHull1);
+	//	}
 
 		return concaveHull;
 	}

@@ -50,7 +50,7 @@ public class NNData<T> implements
 		this.distance = distance;
 	}
 
-	protected T getElement() {
+	public T getElement() {
 		return element;
 	}
 
