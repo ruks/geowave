@@ -15,5 +15,6 @@
 		<module>api</module>
 		<module>client</module>
 		<module>webapp</module>
+		<module>geowave-service-stats</module>
 	</modules>
 </project>
