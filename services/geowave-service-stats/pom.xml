@@ -19,10 +19,6 @@
 			<artifactId>accumulo-server</artifactId>
 			<version>1.5.2</version>
 		</dependency>
-		<dependency>
-			<groupId>mil.nga.giat</groupId>
-			<artifactId>geowave-datastore-accumulo</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
-		</dependency>
+		
 	</dependencies>
 </project>
