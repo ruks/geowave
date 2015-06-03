@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.service.health;
 
+import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -17,10 +19,13 @@ public class MyResource
 	 * the client as "text/plain" media type.
 	 * 
 	 * @return String that will be returned as a text/plain response.
+	 * @throws IOException
 	 */
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
-		return "Got it!";
+		// Data d = new Data();
+		// return d.service();
+		return "Rukshan";
 	}
 }
