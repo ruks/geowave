@@ -32,6 +32,23 @@
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.accumulo</groupId>
+			<artifactId>accumulo-core</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.accumulo</groupId>
+			<artifactId>accumulo-monitor</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.accumulo</groupId>
+			<artifactId>accumulo-test</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+
+
 	</dependencies>
 	<build>
 		<finalName>geowave-service-health</finalName>
