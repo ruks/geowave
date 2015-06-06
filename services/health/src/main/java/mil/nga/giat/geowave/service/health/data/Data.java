@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.service.health.data;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.List;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -9,6 +10,7 @@ import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.conf.SiteConfiguration;
 import org.apache.accumulo.core.trace.DistributedTrace;
+import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.server.Accumulo;
 import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
@@ -22,6 +24,8 @@ public class Data
 	// private static Instance instance;
 	private static ServerConfigurationFactory config;
 	private static AccumuloServerContext context;
+
+	private static boolean started = false;
 
 	public static void start(
 			String[] args )
@@ -113,15 +117,25 @@ public class Data
 		// trace();
 	}
 
-	/*
-	 * private static void trace() { while (true) {
-	 * System.out.println(Monitor.getDataCacheHitRateOverTime().size()); try {
-	 * Thread.sleep(1000); } catch (InterruptedException e) { // TODO
-	 * Auto-generated catch block e.printStackTrace(); } List<Pair<Long,
-	 * Double>> li = Monitor.getLoadOverTime(); for (int i = 0; i < li.size();
-	 * i++) { Pair<Long, Double> p = li.get(i); System.out.print(p.getFirst() +
-	 * " " + p.getSecond() + ", "); } System.out.println(); } }
-	 */
+	@SuppressWarnings("unused")
+	private static void trace() {
+		while (true) {
+			System.out.println(Monitor.getDataCacheHitRateOverTime().size());
+			try {
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			List<Pair<Long, Double>> li = Monitor.getLoadOverTime();
+			for (int i = 0; i < li.size(); i++) {
+				Pair<Long, Double> p = li.get(i);
+				System.out.print(p.getFirst() + " " + p.getSecond() + ", ");
+			}
+			System.out.println();
+		}
+	}
 
 	public static void main(
 			String[] args ) {
@@ -132,5 +146,19 @@ public class Data
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public static void getInstance() {
+		if (!started) {
+			try {
+				start(null);
+				started = true;
+			}
+			catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 	}
 }

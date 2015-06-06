@@ -42,11 +42,11 @@
 			<artifactId>accumulo-monitor</artifactId>
 			<version>1.7.0</version>
 			</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.apache.accumulo</groupId>
 			<artifactId>accumulo-test</artifactId>
 			<version>1.7.0</version>
-		</dependency>
+		</dependency> -->
 
 	</dependencies>
 	<build>
