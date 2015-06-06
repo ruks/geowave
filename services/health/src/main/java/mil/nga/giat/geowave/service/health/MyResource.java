@@ -7,6 +7,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+
+import mil.nga.giat.geowave.service.health.data.Data;
+import mil.nga.giat.geowave.service.health.data.Monitor;
+
 /**
  * Root resource (exposed at "myresource" path)
  */
@@ -26,6 +32,19 @@ public class MyResource
 	public String getIt() {
 		// Data d = new Data();
 		// return d.service();
-		return "Rukshan";
+		/*
+		 * try { Data.start(null); return "Started"; } catch
+		 * (IllegalArgumentException | IllegalAccessException |
+		 * AccumuloException | AccumuloSecurityException | IOException e) { //
+		 * TODO Auto-generated catch block e.printStackTrace(); }
+		 */
+		return "Not Started";
+	}
+
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getLoadOverTime() {
+		// int c = Monitor.getDataCacheHitRateOverTime().size();
+		return "count ";
 	}
 }
