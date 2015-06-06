@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.health.data;
+package mil.nga.giat.geowave.service.healthimpl;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

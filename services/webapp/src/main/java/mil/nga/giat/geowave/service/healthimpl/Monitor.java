@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.health.data;
+package mil.nga.giat.geowave.service.healthimpl;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more

@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.health;
+package mil.nga.giat.geowave.service.impl;
 
 import java.io.IOException;
 
@@ -7,13 +7,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import mil.nga.giat.geowave.service.health.data.Data;
-import mil.nga.giat.geowave.service.health.data.Monitor;
+import mil.nga.giat.geowave.service.healthimpl.Data;
+import mil.nga.giat.geowave.service.healthimpl.Monitor;
 
 /**
- * Root resource (exposed at "myresource" path)
+ * Root resource (exposed at "test" path)
  */
-@Path("myresource")
+@Path("test")
 public class MyResource
 {
 
@@ -28,13 +28,7 @@ public class MyResource
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
 		Data.getInstance();
-
 		return Monitor.getLoadOverTime().size() + "";
 	}
-	// @GET
-	// @Produces(MediaType.TEXT_PLAIN)
-	// public String getLoadOverTime() {
-	// // int c = Monitor.getDataCacheHitRateOverTime().size();
-	// return "count ";
-	// }
+
 }
