@@ -73,12 +73,7 @@
 			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-service-api</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<!-- <dependency>
-			<groupId>mil.nga.giat</groupId>
-			<artifactId>monitor</artifactId>
-			<version>${project.version}</version>
-		</dependency> -->
+		</dependency>		
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet</artifactId>

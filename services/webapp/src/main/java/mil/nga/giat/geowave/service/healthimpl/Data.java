@@ -27,6 +27,10 @@ public class Data
 
 	private static boolean started = false;
 
+	public static boolean isStarted() {
+		return started;
+	}
+
 	public static void start(
 			String[] args )
 			throws AccumuloException,
