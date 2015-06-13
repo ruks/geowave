@@ -5,8 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 import org.apache.accumulo.minicluster.MiniAccumuloConfig;
-import org.apache.accumulo.minicluster.impl.MiniAccumuloClusterImpl;
-import org.apache.accumulo.monitor.Monitor;
 // @formatter:off
 /*if_not[ACCUMULO_1.5.2]
 import org.apache.accumulo.core.conf.Property;
@@ -55,7 +53,7 @@ public class GeoWaveDemoApp
 				new MiniAccumuloConfig(
 						tempDir,
 						password).setNumTservers(
-						2));
+						5));
 		/*end[ACCUMULO_1.5.2]*/
 		// @formatter:on
 		accumulo.start();
@@ -65,8 +63,8 @@ public class GeoWaveDemoApp
 		accumulo.exec(Monitor.class);
 		end[ACCUMULO_1.5.2]*/
 		// @formatter:on
-//		MiniAccumuloClusterImpl mac=accumulo;
-//		accumulo.exec(Monitor.class);
+		// MiniAccumuloClusterImpl mac=accumulo;
+		// accumulo.exec(Monitor.class);
 
 		System.out.println("starting up ...");
 		Thread.sleep(3000);

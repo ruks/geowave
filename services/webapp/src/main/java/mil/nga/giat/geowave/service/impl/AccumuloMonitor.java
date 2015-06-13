@@ -1,12 +1,14 @@
 package mil.nga.giat.geowave.service.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import mil.nga.giat.geowave.service.healthimpl.Data;
 import mil.nga.giat.geowave.service.healthimpl.Monitor;
@@ -31,6 +33,27 @@ public class AccumuloMonitor
 	@Produces(MediaType.TEXT_PLAIN)
 	public boolean isRunning() {
 		return Data.isStarted();
+	}
+
+	@GET
+	@Path("/cors")
+	@Produces("application/json")
+	public Response cors() {
+		List<Pair<Long, Double>> li = Monitor.getDataCacheHitRateOverTime();
+		li.add(new Pair<Long, Double>(
+				1L,
+				1.0));
+		li.add(new Pair<Long, Double>(
+				2L,
+				2.0));
+
+		return Response.ok().entity(
+				li).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
 	}
 
 	@GET
