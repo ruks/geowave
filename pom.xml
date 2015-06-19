@@ -140,7 +140,7 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.accumulo</groupId>
-				<artifactId>accumulo-server</artifactId>
+				<artifactId>accumulo-server-base</artifactId>
 				<version>${accumulo.version}</version>
 				<scope>${accumulo.scope}</scope>
 			</dependency>

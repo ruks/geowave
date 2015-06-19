@@ -16,7 +16,8 @@ import org.apache.accumulo.core.data.Key;
  * guarantee uniqueness for this row ID.
  * 
  */
-//@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "private class only accessed internally")
+// @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification =
+// "private class only accessed internally")
 public class AccumuloRowId
 {
 	private final byte[] insertionId;

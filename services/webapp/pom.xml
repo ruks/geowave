@@ -92,15 +92,11 @@
 			<artifactId>accumulo-monitor</artifactId>
 			<version>1.7.0</version>
 		</dependency>		
+		
 		<dependency>
 			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-test</artifactId>
+			<artifactId>accumulo-server-base</artifactId>
 			<version>1.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-server</artifactId>
-			<version>1.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.accumulo</groupId>
