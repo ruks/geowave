@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import mil.nga.giat.geowave.service.healthimpl.Data;
+import mil.nga.giat.geowave.service.healthimpl.Main;
 import mil.nga.giat.geowave.service.healthimpl.Monitor;
 import mil.nga.giat.geowave.service.jaxbbean.Node;
 
@@ -60,7 +61,8 @@ public class AccumuloMonitor
 	@GET
 	@Path("/test")
 	@Produces("application/json")
-	public Response json() {
+	public Response json()
+			throws Exception {
 
 		int[] num = list();
 		List<Node> nodes = new ArrayList<Node>();
@@ -78,6 +80,37 @@ public class AccumuloMonitor
 
 		return Response.ok().entity(
 				nodes).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
+	}
+
+	@GET
+	@Path("/tablets")
+	@Produces("application/json")
+	public Response tablets()
+			throws Exception {
+
+		// List<Node> nodes = new ArrayList<Node>();
+		//
+		// for (int i = 0; i < 10; i++) {
+		//
+		// nodes.add(new Node(
+		// i,
+		// 0,
+		// "server_" + i,
+		// Math.random(),
+		// Math.random(),
+		// Math.random(),
+		// Math.random()));
+		// }
+
+		List<Node> nodeList = Main.startStat();
+
+		return Response.ok().entity(
+				nodeList).header(
 				"Access-Control-Allow-Origin",
 				"*").header(
 				"Access-Control-Allow-Methods",
