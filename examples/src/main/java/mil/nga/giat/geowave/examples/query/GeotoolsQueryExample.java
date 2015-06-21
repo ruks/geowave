@@ -117,8 +117,8 @@ public class GeotoolsQueryExample
 			InterruptedException {
 
 		final String ACCUMULO_USER = "root";
-		final String ACCUMULO_PASSWORD = "Ge0wave";
-		final String TABLE_NAMESPACE = "";
+		final String ACCUMULO_PASSWORD = "password";
+		final String TABLE_NAMESPACE = "geo";
 
 		tempAccumuloDir = Files.createTempDir();
 

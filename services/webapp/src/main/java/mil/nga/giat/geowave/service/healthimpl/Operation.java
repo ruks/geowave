@@ -6,10 +6,14 @@ import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
-import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
-import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
+//import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloRowId;
+import mil.nga.giat.geowave.index.ByteArrayId;
+import mil.nga.giat.geowave.index.HierarchicalNumericIndexStrategy.SubStrategy;
+import mil.nga.giat.geowave.index.sfc.tiered.TieredSFCIndexStrategy;
+import mil.nga.giat.geowave.store.index.Index;
+import mil.nga.giat.geowave.store.index.IndexType;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -62,14 +66,11 @@ public class Operation {
 				try {
 					AccumuloRowId id = new AccumuloRowId(k);
 					byte[] bb = id.getInsertionId();
-					// System.out.println(new String(bb));
-
-					TieredSFCIndexStrategy t = new TieredSFCIndexStrategy(
-							SPATIAL_TEMPORAL_DIMENSIONS, null, null);
-
+					
 					ByteArrayId insertionId = new ByteArrayId(bb);
-					long[] list = t.getCoordinatesPerDimension(insertionId);
-					// System.out.println(list.length);
+					 Index tempIdx = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+					 long[] list=((TieredSFCIndexStrategy) tempIdx.getIndexStrategy()).getCoordinatesPerDimension(insertionId);
+					System.out.println(list[0]+" "+list[1]);
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
 				}
@@ -81,5 +82,10 @@ public class Operation {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static void main1(String[] args) {
+		Index tempIdx = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		SubStrategy[] subStrats = ((TieredSFCIndexStrategy) tempIdx.getIndexStrategy()).getSubStrategies();
 	}
 }
