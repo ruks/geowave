@@ -156,7 +156,10 @@ public class Main extends Thread {
 
 	private static List<Node> tabletStat(MasterMonitorInfo stats) {
 		List<Node> nodes = new ArrayList<Node>();
+		System.out.println(stats.getTableMap());
+		
 		for (TabletServerStatus server : stats.tServerInfo) {
+			System.out.println(server.name);
 			TableInfo summary = TableInfoUtil.summarizeTableStats(server);
 			System.out.println(summary.ingestRate);
 			System.out.println(summary.scanRate);

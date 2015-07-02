@@ -43,6 +43,7 @@ public class Operation {
 		}
 
 		TableOperations op = conn.tableOperations();
+		
 		try {
 			System.out.println(op.getProperties("ruks_SPATIAL_VECTOR_IDX"));
 		} catch (AccumuloException | TableNotFoundException e1) {
