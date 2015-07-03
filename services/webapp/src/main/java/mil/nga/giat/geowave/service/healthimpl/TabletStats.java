@@ -34,7 +34,7 @@ public class TabletStats {
 			client = MasterClient.getConnectionWithRetry(context);
 			stats = client.getMasterStats(Tracer.traceInfo(),
 					context.rpcCreds());
-			System.out.println(stats.getTServerInfo());
+			// System.out.println(stats.getTServerInfo());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			return;
@@ -49,12 +49,30 @@ public class TabletStats {
 
 	private static void tabletStat(MasterMonitorInfo stats) {
 		List<TabletServerStatus> tabs = stats.getTServerInfo();
+		System.out.println();
+		// System.out.println(tabs);
+
 		for (int i = 0; i < tabs.size(); i++) {
-			TabletServerStatus sta=tabs.get(i);
-			System.out.println("name "+sta.getName());
-			System.out.println("time "+sta.getLastContact());
+			TabletServerStatus sta = tabs.get(i);
+			System.out.println("name " + sta.getName());
+			System.out.println("time " + sta.getLastContact());
+
+			Map<String, TableInfo> map = sta.getTableMap();
+			Set<String> key = map.keySet();
+			Object[] arr = key.toArray();
+			for (int j = 0; j < arr.length; j++) {
+				TableInfo info=map.get(arr[j]);
+				System.out.println(info.getIngestRate());
+				System.out.println(info.getRecs());
+				System.out.println(info.getQueryRate());
+				System.out.println(info.getScans());
+				System.out.println(info.getMinors());
+				System.out.println(info.getMajors());
+			}
 			
-			
+			System.out.println("time " + sta.getIndexCacheHits());
+			System.out.println("time " + sta.getDataCacheHits());
+			System.out.println("time " + sta.getOsLoad());
 			System.out.println();
 		}
 
