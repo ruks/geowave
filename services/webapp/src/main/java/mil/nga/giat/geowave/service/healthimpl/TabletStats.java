@@ -8,6 +8,7 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.impl.MasterClient;
+import org.apache.accumulo.core.master.thrift.Compacting;
 import org.apache.accumulo.core.master.thrift.MasterClientService;
 import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
 import org.apache.accumulo.core.master.thrift.TableInfo;
@@ -55,24 +56,53 @@ public class TabletStats {
 		for (int i = 0; i < tabs.size(); i++) {
 			TabletServerStatus sta = tabs.get(i);
 			System.out.println("name " + sta.getName());
+			System.out.println("getTableMapSize " + sta.getTableMapSize());
 			System.out.println("time " + sta.getLastContact());
 
 			Map<String, TableInfo> map = sta.getTableMap();
 			Set<String> key = map.keySet();
+
+			int entries = 0, ingest = 0, query = 0;
+			Compacting scans = new Compacting(0, 0);
+			Compacting minor = new Compacting(0, 0);
+			Compacting major = new Compacting(0, 0);
+
 			Object[] arr = key.toArray();
 			for (int j = 0; j < arr.length; j++) {
-				TableInfo info=map.get(arr[j]);
-				System.out.println(info.getIngestRate());
-				System.out.println(info.getRecs());
-				System.out.println(info.getQueryRate());
-				System.out.println(info.getScans());
-				System.out.println(info.getMinors());
-				System.out.println(info.getMajors());
+				TableInfo info = map.get(arr[j]);
+				entries += info.getRecs();
+				ingest += info.getIngestRate();
+				query += info.getQueryRate();
+
+				if (info.getScans() != null) {
+					scans.setRunning(info.getScans().getRunning());
+					scans.setQueued(info.getScans().getQueued());
+
+					minor.setRunning(info.getMinors().getRunning());
+					minor.setQueued(info.getMinors().getQueued());
+
+					major.setRunning(info.getMajors().getRunning());
+					major.setQueued(info.getMajors().getQueued());
+				}
+
 			}
-			
-			System.out.println("time " + sta.getIndexCacheHits());
-			System.out.println("time " + sta.getDataCacheHits());
-			System.out.println("time " + sta.getOsLoad());
+
+			System.out.println("Entries " + entries);
+			System.out.println("Ingest " + ingest);
+			System.out.println("Query " + query);
+			System.out.println("Scans " + scans);
+			System.out.println("Minor " + minor);
+			System.out.println("Major " + major);
+
+			double datacHits = sta.getDataCacheHits()
+					/ (sta.getDataCacheRequest() + 0.0);
+			double indexcHits = sta.getIndexCacheHits()
+					/ (sta.getIndexCacheRequest() + 0.0);
+
+			System.out.println("index cache Hits " + indexcHits);
+			System.out.println("Data cachre hits " + datacHits);
+
+			System.out.println("os load " + sta.getOsLoad());
 			System.out.println();
 		}
 
