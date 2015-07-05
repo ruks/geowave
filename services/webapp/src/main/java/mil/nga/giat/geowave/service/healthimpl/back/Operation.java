@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.healthimpl;
+package mil.nga.giat.geowave.service.healthimpl.back;
 
 import java.util.Map.Entry;
 

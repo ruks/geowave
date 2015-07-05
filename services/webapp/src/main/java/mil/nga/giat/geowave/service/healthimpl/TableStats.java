@@ -1,12 +1,17 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.impl.MasterClient;
+import org.apache.accumulo.core.master.thrift.Compacting;
 import org.apache.accumulo.core.master.thrift.MasterClientService;
 import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
 import org.apache.accumulo.core.master.thrift.TableInfo;
@@ -15,7 +20,10 @@ import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 
 public class TableStats {
-	public static void startStat() throws Exception {
+	private MasterMonitorInfo masterMonitorInfo = null;
+	private List<TableBean> tableStats;
+
+	public TableStats() throws Exception {
 
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
@@ -42,11 +50,12 @@ public class TableStats {
 				MasterClient.close(client);
 		}
 
-		tabletStat(stats);
 	}
 
-	private static void tabletStat(MasterMonitorInfo stats) {
-		Map<String, TableInfo> map = stats.getTableMap();
+	private List<TableBean> getTableStat() {
+		Map<String, TableInfo> map = masterMonitorInfo.getTableMap();
+		tableStats = new ArrayList<TableBean>();
+
 		System.out.println(map.keySet());
 		System.out.println(map.size());
 		Set<String> tabs = map.keySet();
@@ -54,27 +63,49 @@ public class TableStats {
 		Object[] arr = tabs.toArray();
 		System.out.println(arr.length);
 
+		String tableName;
+		String state;
+		int tablets;
+		int offlineTablets;
+		long entries;
+		long entriesInMemory;
+		double ingest;
+		double entriesRead;
+		double entriesReturned;
+		long holdTime;
+		Compacting majorunningScans;
+		Compacting minorCompactions;
+		Compacting majorCompactions;
+
 		for (int i = 0; i < arr.length; i++) {
 			TableInfo info = map.get(arr[i]);
-			System.out.println("Tablets "+info.getTablets());
-			System.out.println("Offline Tables "+(info.getTablets()-info.getOnlineTablets()));
-			System.out.println("Entries "+info.getRecs());
-			System.out.println("Entries in mem "+info.getRecsInMemory());
-			System.out.println("ingest "+info.getIngestRate());
-			System.out.println("Entried Read "+info.getScanRate());
-			System.out.println("Entried return "+info.getQueryRate());
-			System.out.println("Hold time "+"-");
-			System.out.println("Running Scans "+info.getScans().getRunning()+" "+info.getScans().getQueued());
-			System.out.println("Minor Compaction "+info.getMinors().getRunning()+" "+info.getMinors().getQueued());
-			System.out.println("Major Compaction "+info.getMajors().getRunning()+" "+info.getMajors().getQueued());
-			
-			System.out.println();
+
+			tableName = "name";
+			state = "ONLINE";
+			tablets = info.getTablets();
+			offlineTablets = info.getTablets() - info.getOnlineTablets();
+			entries = info.getRecs();
+			entriesInMemory = info.getRecsInMemory();
+			ingest = info.getIngestRate();
+			entriesRead = info.getScanRate();
+			entriesReturned = info.getQueryRate();
+			holdTime = 0;
+			majorunningScans = info.getScans();
+			minorCompactions = info.getMinors();
+			majorCompactions = info.getMajors();
+
+			tableStats.add(new TableBean(tableName, state, tablets,
+					offlineTablets, entries, entriesInMemory, ingest,
+					entriesRead, entriesReturned, holdTime, majorunningScans,
+					minorCompactions, majorCompactions));
 		}
 
+		return tableStats;
 	}
 
 	public static void main(String[] args) throws Exception {
-
-		startStat();
+		TableStats stats = new TableStats();
+		List<TableBean> sta = stats.getTableStat();
+		System.out.println(sta.size());
 	}
 }

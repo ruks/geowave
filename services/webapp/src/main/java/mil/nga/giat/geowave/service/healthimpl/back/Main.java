@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.healthimpl;
+package mil.nga.giat.geowave.service.healthimpl.back;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
