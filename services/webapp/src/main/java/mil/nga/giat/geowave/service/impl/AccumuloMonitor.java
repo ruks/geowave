@@ -10,9 +10,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import mil.nga.giat.geowave.service.healthimpl.Data;
-import mil.nga.giat.geowave.service.healthimpl.Main;
-import mil.nga.giat.geowave.service.healthimpl.Monitor;
+import mil.nga.giat.geowave.service.healthimpl.back.Data;
+import mil.nga.giat.geowave.service.healthimpl.back.Main;
+import mil.nga.giat.geowave.service.healthimpl.back.Monitor;
 import mil.nga.giat.geowave.service.jaxbbean.Node;
 
 import org.apache.accumulo.core.util.Pair;

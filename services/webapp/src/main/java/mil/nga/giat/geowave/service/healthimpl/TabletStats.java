@@ -53,7 +53,7 @@ public class TabletStats {
 
 	}
 
-	private List<TabletBean> getTabletStats() {
+	public List<TabletBean> getTabletStats() {
 		List<TabletServerStatus> tabs = masterMonitorInfo.getTServerInfo();
 		tabletStats = new ArrayList<TabletBean>();
 

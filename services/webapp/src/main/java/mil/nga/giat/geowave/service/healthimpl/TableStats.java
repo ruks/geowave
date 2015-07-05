@@ -52,7 +52,7 @@ public class TableStats {
 
 	}
 
-	private List<TableBean> getTableStat() {
+	public List<TableBean> getTableStat() {
 		Map<String, TableInfo> map = masterMonitorInfo.getTableMap();
 		tableStats = new ArrayList<TableBean>();
 

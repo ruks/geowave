@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
 import mil.nga.giat.geowave.datastore.accumulo.app.GeoWaveDemoApp;
+import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
 
 import org.junit.Assert;
@@ -10,29 +11,26 @@ public class TabletStatsTest {
 
 	@Test
 	public void testTabletCount() throws Exception {
-		TabletStats.main(null);
-		Assert.assertEquals(2, TabletStats.getTabletStats().size());
+		TabletStats stat = new TabletStats();
+		Assert.assertEquals(2, stat.getTabletStats().size());
 	}
 
 	@Test
 	public void testTables() throws Exception {
 		GeoWaveDemoApp.main(null);
-		
-		TabletStats.main(null);
-		TabletBean stat=TabletStats.getTabletStats().get(0);
-		Assert.assertEquals(2, stat.getTablets());
-		Assert.assertEquals(14, stat.getEntries());
-		Assert.assertEquals(1, stat.getIngest());
-		Assert.assertEquals(3, stat.getQuery());
+
+		TableStats stat = new TableStats();
+		TableBean tableStat = stat.getTableStat().get(0);
+		Assert.assertEquals(2, tableStat.getTablets());
+		Assert.assertEquals(14, tableStat.getEntries());
 	}
-	
+
 	@Test
 	public void testTablesAfterIngest() throws Exception {
-		TabletStats.main(null);
-		TabletBean stat=TabletStats.getTabletStats().get(0);
-		Assert.assertEquals(2, stat.getTablets());
-		Assert.assertEquals(14, stat.getEntries());
-		Assert.assertEquals(1, stat.getIngest());
-		Assert.assertEquals(3, stat.getQuery());
+
+		TableStats stat = new TableStats();
+		TableBean tableStat = stat.getTableStat().get(0);
+		Assert.assertEquals(2, tableStat.getTablets());
+		Assert.assertEquals(14, tableStat.getEntries());
 	}
 }
