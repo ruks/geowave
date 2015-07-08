@@ -39,7 +39,6 @@ public class TableStats
 		System.out.println(conn.getInstance().getInstanceName());
 
 		MasterClientService.Iface client = null;
-		MasterMonitorInfo stats = null;
 		try {
 			AccumuloServerContext context = new AccumuloServerContext(
 					new ServerConfigurationFactory(
@@ -48,7 +47,6 @@ public class TableStats
 			masterMonitorInfo = client.getMasterStats(
 					Tracer.traceInfo(),
 					context.rpcCreds());
-			System.out.println(stats.getTServerInfo());
 		}
 		catch (Exception e) {
 			System.out.println(e.getMessage());

@@ -108,10 +108,10 @@
 			<artifactId>geowave-vector</artifactId>
 			<version>0.8.5</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-example</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 </project>
