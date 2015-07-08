@@ -21,17 +21,24 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 
-public class GeospatialExtent {
+public class GeospatialExtent
+{
 
-	public static void main(String[] args) {
+	public static void main(
+			String[] args ) {
 		// TODO Auto-generated method stub
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
 		Connector conn;
 		try {
-			conn = inst.getConnector("root", "password");
-		} catch (AccumuloException | AccumuloSecurityException e) {
+			conn = inst.getConnector(
+					"root",
+					"password");
+		}
+		catch (AccumuloException | AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
@@ -41,12 +48,16 @@ public class GeospatialExtent {
 		getSplits(conn);
 	}
 
-	public static void addSplits(Connector conn) {
+	public static void addSplits(
+			Connector conn ) {
 		Authorizations auths = new Authorizations();
 		Scanner scan;
 		try {
-			scan = conn.createScanner("ruks_SPATIAL_VECTOR_IDX", auths);
-		} catch (TableNotFoundException e1) {
+			scan = conn.createScanner(
+					"ruks_SPATIAL_VECTOR_IDX",
+					auths);
+		}
+		catch (TableNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			return;
@@ -62,24 +73,29 @@ public class GeospatialExtent {
 			Key k = entry.getKey();
 			if (cnt == 300) {
 				keys.add(k.getRow());
-			} else if (cnt == 600) {
+			}
+			else if (cnt == 600) {
 				keys.add(k.getRow());
-			} else if (cnt == 900) {
+			}
+			else if (cnt == 900) {
 				keys.add(k.getRow());
 			}
 			cnt++;
 		}
 
 		try {
-			op.addSplits("ruks_SPATIAL_VECTOR_IDX", keys);
-		} catch (TableNotFoundException | AccumuloException
-				| AccumuloSecurityException e) {
+			op.addSplits(
+					"ruks_SPATIAL_VECTOR_IDX",
+					keys);
+		}
+		catch (TableNotFoundException | AccumuloException | AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public static void getSplits(Connector conn) {
+	public static void getSplits(
+			Connector conn ) {
 		TableOperations op = conn.tableOperations();
 
 		try {
@@ -87,14 +103,16 @@ public class GeospatialExtent {
 					op.listSplits("ruks_SPATIAL_VECTOR_IDX"));
 			System.out.println(list.size());
 
-		    TabletLocator root;
-//		    root=new TabletLocatorImpl(table, parent, tlo, tslc);
-//		    root.getLocator(context, tableId);
+			TabletLocator root;
+			// root=new TabletLocatorImpl(table, parent, tlo, tslc);
+			// root.getLocator(context, tableId);
 
-		} catch (AccumuloException | TableNotFoundException e1) {
+		}
+		catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		} catch (AccumuloSecurityException e) {
+		}
+		catch (AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

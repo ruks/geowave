@@ -19,35 +19,44 @@ import org.apache.accumulo.core.trace.Tracer;
 import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 
-public class TableStats {
+public class TableStats
+{
 	private MasterMonitorInfo masterMonitorInfo = null;
 	private List<TableBean> tableStats;
 
-	public TableStats() throws Exception {
+	public TableStats()
+			throws Exception {
 
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
 		@SuppressWarnings("deprecation")
-		Connector conn = inst.getConnector("root", "password");
+		Connector conn = inst.getConnector(
+				"root",
+				"password");
 		System.out.println(conn.getInstance().getInstanceName());
 
 		MasterClientService.Iface client = null;
 		MasterMonitorInfo stats = null;
 		try {
 			AccumuloServerContext context = new AccumuloServerContext(
-					new ServerConfigurationFactory(inst));
+					new ServerConfigurationFactory(
+							inst));
 			client = MasterClient.getConnectionWithRetry(context);
-			stats = client.getMasterStats(Tracer.traceInfo(),
+			masterMonitorInfo = client.getMasterStats(
+					Tracer.traceInfo(),
 					context.rpcCreds());
 			System.out.println(stats.getTServerInfo());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			System.out.println(e.getMessage());
 			return;
-		} finally {
+		}
+		finally {
 
-			if (client != null)
-				MasterClient.close(client);
+			if (client != null) MasterClient.close(client);
 		}
 
 	}
@@ -57,11 +66,9 @@ public class TableStats {
 		tableStats = new ArrayList<TableBean>();
 
 		System.out.println(map.keySet());
-		System.out.println(map.size());
 		Set<String> tabs = map.keySet();
 
 		Object[] arr = tabs.toArray();
-		System.out.println(arr.length);
 
 		String tableName;
 		String state;
@@ -80,7 +87,7 @@ public class TableStats {
 		for (int i = 0; i < arr.length; i++) {
 			TableInfo info = map.get(arr[i]);
 
-			tableName = "name";
+			tableName = info.toString();
 			state = "ONLINE";
 			tablets = info.getTablets();
 			offlineTablets = info.getTablets() - info.getOnlineTablets();
@@ -94,18 +101,33 @@ public class TableStats {
 			minorCompactions = info.getMinors();
 			majorCompactions = info.getMajors();
 
-			tableStats.add(new TableBean(tableName, state, tablets,
-					offlineTablets, entries, entriesInMemory, ingest,
-					entriesRead, entriesReturned, holdTime, majorunningScans,
-					minorCompactions, majorCompactions));
+			tableStats.add(new TableBean(
+					tableName,
+					state,
+					tablets,
+					offlineTablets,
+					entries,
+					entriesInMemory,
+					ingest,
+					entriesRead,
+					entriesReturned,
+					holdTime,
+					majorunningScans,
+					minorCompactions,
+					majorCompactions));
 		}
 
 		return tableStats;
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(
+			String[] args )
+			throws Exception {
 		TableStats stats = new TableStats();
 		List<TableBean> sta = stats.getTableStat();
-		System.out.println(sta.size());
+		for (int i = 0; i < sta.size(); i++) {
+			System.out.println(sta.get(
+					i).getTableName());
+		}
 	}
 }

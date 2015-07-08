@@ -2,7 +2,8 @@ package mil.nga.giat.geowave.service.jaxbbean;
 
 import org.apache.accumulo.core.master.thrift.Compacting;
 
-public class TabletBean {
+public class TabletBean
+{
 	private String name;
 	private int tablets;
 	private long lastContact;
@@ -17,12 +18,20 @@ public class TabletBean {
 	private double indexcHits;
 	private double osLoad;
 
-	
-
-	public TabletBean(String name, int tablets, long lastContact, int entries,
-			int ingest, int query, long holdTime, Compacting scans,
-			Compacting minor, Compacting major, double datacHits,
-			double indexcHits, double osLoad) {
+	public TabletBean(
+			String name,
+			int tablets,
+			long lastContact,
+			int entries,
+			int ingest,
+			int query,
+			long holdTime,
+			Compacting scans,
+			Compacting minor,
+			Compacting major,
+			double datacHits,
+			double indexcHits,
+			double osLoad ) {
 		super();
 		this.name = name;
 		this.tablets = tablets;
@@ -43,7 +52,8 @@ public class TabletBean {
 		return holdTime;
 	}
 
-	public void setHoldTime(long holdTime) {
+	public void setHoldTime(
+			long holdTime ) {
 		this.holdTime = holdTime;
 	}
 
@@ -51,7 +61,8 @@ public class TabletBean {
 		return osLoad;
 	}
 
-	public void setOsLoad(double osLoad) {
+	public void setOsLoad(
+			double osLoad ) {
 		this.osLoad = osLoad;
 	}
 
@@ -59,7 +70,8 @@ public class TabletBean {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(
+			String name ) {
 		this.name = name;
 	}
 
@@ -67,7 +79,8 @@ public class TabletBean {
 		return tablets;
 	}
 
-	public void setTablets(int tablets) {
+	public void setTablets(
+			int tablets ) {
 		this.tablets = tablets;
 	}
 
@@ -75,7 +88,8 @@ public class TabletBean {
 		return lastContact;
 	}
 
-	public void setLastContact(long lastContact) {
+	public void setLastContact(
+			long lastContact ) {
 		this.lastContact = lastContact;
 	}
 
@@ -83,7 +97,8 @@ public class TabletBean {
 		return datacHits;
 	}
 
-	public void setDatacHits(double datacHits) {
+	public void setDatacHits(
+			double datacHits ) {
 		this.datacHits = datacHits;
 	}
 
@@ -91,19 +106,23 @@ public class TabletBean {
 		return indexcHits;
 	}
 
-	public void setIndexcHits(double indexcHits) {
+	public void setIndexcHits(
+			double indexcHits ) {
 		this.indexcHits = indexcHits;
 	}
 
-	public void setQuery(int query) {
+	public void setQuery(
+			int query ) {
 		this.query = query;
 	}
 
-	public void setScans(Compacting scans) {
+	public void setScans(
+			Compacting scans ) {
 		this.scans = scans;
 	}
 
-	public void setMinor(Compacting minor) {
+	public void setMinor(
+			Compacting minor ) {
 		this.minor = minor;
 	}
 
@@ -111,7 +130,8 @@ public class TabletBean {
 		return entries;
 	}
 
-	public void setEntries(int entries) {
+	public void setEntries(
+			int entries ) {
 		this.entries = entries;
 	}
 
@@ -119,7 +139,8 @@ public class TabletBean {
 		return ingest;
 	}
 
-	public void setIngest(int ingest) {
+	public void setIngest(
+			int ingest ) {
 		this.ingest = ingest;
 	}
 
@@ -127,7 +148,8 @@ public class TabletBean {
 		return major;
 	}
 
-	public void setMajor(Compacting major) {
+	public void setMajor(
+			Compacting major ) {
 		this.major = major;
 	}
 

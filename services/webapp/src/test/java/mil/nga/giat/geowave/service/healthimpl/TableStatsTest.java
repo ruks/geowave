@@ -1,13 +1,13 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
 import mil.nga.giat.geowave.examples.ingest.SimpleIngest;
-import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
+import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TabletStatsTest
+public class TableStatsTest
 {
 
 	@Before
@@ -23,20 +23,24 @@ public class TabletStatsTest
 	}
 
 	@Test
-	public void testTabletCount()
+	public void testTableCount()
 			throws Exception {
-		TabletStats stat = new TabletStats();
-		Assert.assertTrue(stat.getTabletStats().size() > 0);
+		TableStats stat = new TableStats();
+		Assert.assertEquals(
+				5,
+				stat.getTableStat().size());
 	}
 
 	@Test
 	public void testTablets()
 			throws Exception {
 
-		TabletStats stat = new TabletStats();
-		TabletBean tabletStat = stat.getTabletStats().get(
+		TableStats stat = new TableStats();
+		TableBean tableStat = stat.getTableStat().get(
 				0);
-		Assert.assertNotNull(tabletStat);
+		Assert.assertNotNull(tableStat);
+		Assert.assertNotNull(tableStat.getTablets());
+		Assert.assertNotNull(tableStat.getEntries());
 	}
 
 }
