@@ -1,25 +1,17 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
-import mil.nga.giat.geowave.examples.ingest.SimpleIngest;
 import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TabletStatsTest
 {
 
-	@Before
+	@BeforeClass
 	public void ingest() {
-		String[] args = {
-			"127.0.0.1:2181",
-			"geowave",
-			"root",
-			"password",
-			"ruks"
-		};
-		SimpleIngest.main(args);
+
 	}
 
 	@Test

@@ -82,36 +82,45 @@
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 		</dependency>
+		<!-- <dependency> <groupId>org.apache.accumulo</groupId> <artifactId>accumulo-core</artifactId> 
+			<version>1.7.0</version> </dependency> <dependency> <groupId>org.apache.accumulo</groupId> 
+			<artifactId>accumulo-monitor</artifactId> <version>1.7.0</version> </dependency> 
+			<dependency> <groupId>org.apache.accumulo</groupId> <artifactId>accumulo-server-base</artifactId> 
+			<version>1.7.0</version> </dependency> <dependency> <groupId>org.apache.accumulo</groupId> 
+			<artifactId>accumulo-trace</artifactId> <version>1.7.0</version> </dependency> -->
 		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-core</artifactId>
-			<version>1.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-monitor</artifactId>
-			<version>1.7.0</version>
-		</dependency>		
-		
-		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-server-base</artifactId>
-			<version>1.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-trace</artifactId>
-			<version>1.7.0</version>
-		</dependency>
-	<dependency>
 			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-vector</artifactId>
 			<version>0.8.5</version>
 		</dependency>
-		<!-- <dependency>
-			<groupId>mil.nga.giat</groupId>
-			<artifactId>geowave-example</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>mil.nga.giat</groupId> <artifactId>geowave-example</artifactId> 
+			<version>0.8.7-SNAPSHOT</version> </dependency> -->
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.accumulo</groupId>
+				<artifactId>accumulo-core</artifactId>
+				<version>1.7.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.accumulo</groupId>
+				<artifactId>accumulo-monitor</artifactId>
+				<version>1.7.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.accumulo</groupId>
+				<artifactId>accumulo-server-base</artifactId>
+				<version>1.7.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.accumulo</groupId>
+				<artifactId>accumulo-trace</artifactId>
+				<version>1.7.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 </project>

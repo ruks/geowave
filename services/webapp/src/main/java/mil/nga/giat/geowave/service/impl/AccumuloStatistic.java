@@ -17,7 +17,8 @@ import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
  * Root resource (exposed at "stat" path)
  */
 @Path("stat")
-public class AccumuloStatistic {
+public class AccumuloStatistic
+{
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
@@ -32,19 +33,21 @@ public class AccumuloStatistic {
 		TableStats stat;
 		try {
 			stat = new TableStats();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 		List<TableBean> list = stat.getTableStat();
 
-		return Response
-				.ok()
-				.entity(list)
-				.header("Access-Control-Allow-Origin", "*")
-				.header("Access-Control-Allow-Methods",
-						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
+		return Response.ok().entity(
+				list).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
 	}
 
 	@GET
@@ -55,18 +58,20 @@ public class AccumuloStatistic {
 		TabletStats stat;
 		try {
 			stat = new TabletStats();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 		List<TabletBean> list = stat.getTabletStats();
 
-		return Response
-				.ok()
-				.entity(list)
-				.header("Access-Control-Allow-Origin", "*")
-				.header("Access-Control-Allow-Methods",
-						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
+		return Response.ok().entity(
+				list).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
 	}
 }

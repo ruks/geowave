@@ -14,8 +14,8 @@ import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.client.impl.TabletLocator;
-import org.apache.accumulo.core.client.impl.TabletLocatorImpl;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
@@ -25,7 +25,8 @@ public class GeospatialExtent
 {
 
 	public static void main(
-			String[] args ) {
+			String[] args )
+			throws Exception {
 		// TODO Auto-generated method stub
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
@@ -33,19 +34,15 @@ public class GeospatialExtent
 				instanceName,
 				zooServers);
 		Connector conn;
-		try {
-			conn = inst.getConnector(
-					"root",
-					"password");
-		}
-		catch (AccumuloException | AccumuloSecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
+		AuthenticationToken authToken = new PasswordToken(
+				"password");
+		conn = inst.getConnector(
+				"root",
+				authToken);
 
 		// addSplits(conn);
 		getSplits(conn);
+		// t.delete(testTname);
 	}
 
 	public static void addSplits(
@@ -103,7 +100,7 @@ public class GeospatialExtent
 					op.listSplits("ruks_SPATIAL_VECTOR_IDX"));
 			System.out.println(list.size());
 
-			TabletLocator root;
+			// TabletLocator root;
 			// root=new TabletLocatorImpl(table, parent, tlo, tslc);
 			// root.getLocator(context, tableId);
 

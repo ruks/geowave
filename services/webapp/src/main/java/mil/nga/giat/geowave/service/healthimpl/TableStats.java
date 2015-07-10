@@ -3,14 +3,18 @@ package mil.nga.giat.geowave.service.healthimpl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.client.impl.MasterClient;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.master.thrift.Compacting;
 import org.apache.accumulo.core.master.thrift.MasterClientService;
 import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
@@ -23,6 +27,7 @@ public class TableStats
 {
 	private MasterMonitorInfo masterMonitorInfo = null;
 	private List<TableBean> tableStats;
+	private Connector conn;
 
 	public TableStats()
 			throws Exception {
@@ -32,11 +37,11 @@ public class TableStats
 		Instance inst = new ZooKeeperInstance(
 				instanceName,
 				zooServers);
-		@SuppressWarnings("deprecation")
-		Connector conn = inst.getConnector(
-				"root",
+		AuthenticationToken authToken = new PasswordToken(
 				"password");
-		System.out.println(conn.getInstance().getInstanceName());
+		this.conn = inst.getConnector(
+				"root",
+				authToken);
 
 		MasterClientService.Iface client = null;
 		try {
@@ -60,13 +65,8 @@ public class TableStats
 	}
 
 	public List<TableBean> getTableStat() {
-		Map<String, TableInfo> map = masterMonitorInfo.getTableMap();
+		Map<String, TableInfo> map = masterMonitorInfo.tableMap;
 		tableStats = new ArrayList<TableBean>();
-
-		System.out.println(map.keySet());
-		Set<String> tabs = map.keySet();
-
-		Object[] arr = tabs.toArray();
 
 		String tableName;
 		String state;
@@ -82,10 +82,13 @@ public class TableStats
 		Compacting minorCompactions;
 		Compacting majorCompactions;
 
-		for (int i = 0; i < arr.length; i++) {
-			TableInfo info = map.get(arr[i]);
+		TableOperations t = conn.tableOperations();
+		Map<String, String> idm = reverseMap(t.tableIdMap());
 
-			tableName = info.toString();
+		for (Entry<String, TableInfo> entry : map.entrySet()) {
+			TableInfo info = entry.getValue();
+
+			tableName = idm.get(entry.getKey());
 			state = "ONLINE";
 			tablets = info.getTablets();
 			offlineTablets = info.getTablets() - info.getOnlineTablets();
@@ -127,5 +130,18 @@ public class TableStats
 			System.out.println(sta.get(
 					i).getTableName());
 		}
+
+	}
+
+	public Map<String, String> reverseMap(
+			Map<String, String> map ) {
+		Map<String, String> idm = new TreeMap<String, String>();
+		for (Entry<String, String> entry : map.entrySet()) {
+			String v = entry.getValue();
+			idm.put(
+					v,
+					entry.getKey());
+		}
+		return idm;
 	}
 }
