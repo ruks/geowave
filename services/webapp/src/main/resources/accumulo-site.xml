@@ -77,6 +77,11 @@
     <value>root</value>
   </property>
 
+<property>
+    <name>trace.password</name>
+    <value>root</value>
+  </property>
+  
   <property>
     <name>tserver.sort.buffer.size</name>
     <value>50M</value>

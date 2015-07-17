@@ -11,6 +11,7 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.ClientConfiguration;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
@@ -22,7 +23,10 @@ import org.apache.accumulo.core.client.impl.TabletLocator.TabletLocation;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.data.impl.KeyExtent;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 
@@ -36,7 +40,7 @@ public class GeospatialExtent {
 		Connector conn;
 		AuthenticationToken authToken = new PasswordToken("password");
 		conn = inst.getConnector("root", authToken);
-//		 addSplits(conn);
+		// addSplits(conn);
 		getSplits(conn, inst);
 		// read();
 		// t.delete(testTname);
@@ -89,57 +93,52 @@ public class GeospatialExtent {
 					op.listSplits("ruks_SPATIAL_VECTOR_IDX"));
 			System.out.println(list.size());
 
-			TabletLocator root;
-			Text tid = new Text("ruks_SPATIAL_VECTOR_IDX");
-			// String instanceName = "geowave";
-			// String zooServers = "127.0.0.1";
-			// Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+			for (int i = 0; i < list.size(); i++) {
+				Key ke = new Key(list.get(i));
 
-			// Connector conn;
-			try {
-				conn = inst.getConnector("root", "password");
-			} catch (AccumuloException | AccumuloSecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
 			}
 
 			ClientConfiguration clientConf = ClientConfiguration.loadDefault();
-//			ClientConfiguration cc = new ClientConfiguration();
-//			cc.setProperty(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST, "localhost:2181");
-//			cc.setProperty(ClientConfiguration.ClientProperty.INSTANCE_NAME, "geowave");
-//			cc.setProperty(ClientConfiguration.ClientProperty.RPC_SSL_TRUSTSTORE_PASSWORD, "password");
-			
+
 			Instance accInstance = inst;
 			ClientContext ctx = new ClientContext(accInstance, new Credentials(
 					"root", new PasswordToken("password")), clientConf);
 			TabletLocator tl = TabletLocator.getLocator(ctx, new Text("2"));
 			System.out.println();
-			
-			TabletLocation tt1=tl.locateTablet(ctx, list.get(0), false, false);
-			System.out.println(tt1.tablet_location);
-			TabletLocation tt2=tl.locateTablet(ctx, list.get(1), false, false);
-			System.out.println(tt2.tablet_location);
-			TabletLocation tt3=tl.locateTablet(ctx, list.get(2), false, false);
-			System.out.println(tt3.tablet_location);
-			
-			
-			// AccumuloServerContext context = new AccumuloServerContext(
-			// new ServerConfigurationFactory(conn.getInstance()));
-			//
-			// AuthenticationToken authToken = new PasswordToken("password");
-			//
-			// ClientContext c = new ClientContext(conn.getInstance(),
-			// new Credentials("geowave", authToken),
-			// inst.getConfiguration());
 
-			// TabletLocator tl = TabletLocator.getLocator(c, new Text(
-			// "ruks_SPATIAL_VECTOR_IDX"));
-			// System.out.println(tl.locateTablet(c, list.get(0), false,
-			// false));
-			// root.getLocator(context, tableId);
-			// TabletLocator.getLocator(context, tid).locateTablet(context,
-			// list.get(0), false, false);
+			TabletLocation tt1 = tl
+					.locateTablet(ctx, list.get(0), false, false);
+			System.out.println(tt1.tablet_location);
+			KeyExtent ke1 = tt1.tablet_extent;
+			String loc1 = tl.locateTablet(ctx, ke1.getEndRow(), false, false).tablet_location;
+			System.out.println(loc1);
+			Range r1 = new Range(list.get(0), ke1.getEndRow());
+			// TabletId id1=new TabletIdImpl(ke1);
+			// System.out.println(id1);
+
+			TabletLocation tt2 = tl
+					.locateTablet(ctx, list.get(1), false, false);
+			System.out.println(tt2.tablet_location);
+			KeyExtent ke2 = tt2.tablet_extent;
+			String loc2 = tl.locateTablet(ctx, ke2.getEndRow(), false, false).tablet_location;
+			System.out.println(loc2);
+			Range r2 = new Range(list.get(1), ke2.getEndRow());
+
+			TabletLocation tt3 = tl
+					.locateTablet(ctx, list.get(2), false, false);
+			System.out.println(tt3.tablet_location);
+			KeyExtent ke3 = tt3.tablet_extent;
+			String loc3 = tl.locateTablet(ctx, ke3.getEndRow(), false, false).tablet_location;
+			System.out.println(loc3);
+			Range r3 = new Range(list.get(2), ke3.getEndRow());
+
+			Text fRow = read(list.get(0), conn).getRow();
+			TabletLocation tt0 = tl.locateTablet(ctx, fRow, false, false);
+			System.out.println(tt0.tablet_location);
+			KeyExtent ke0 = tt0.tablet_extent;
+			String loc0 = tl.locateTablet(ctx, ke0.getEndRow(), false, false).tablet_location;
+			System.out.println(loc0);
+			Range r0 = new Range(fRow, ke0.getEndRow());
 
 		} catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
@@ -150,44 +149,30 @@ public class GeospatialExtent {
 		}
 	}
 
-	public static void read() {
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
-		Connector conn;
-		try {
-			conn = inst.getConnector("root", "password");
-		} catch (AccumuloException | AccumuloSecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-
-		TableOperations op = conn.tableOperations();
-
-		try {
-			System.out.println(op.getProperties("ruks_SPATIAL_VECTOR_IDX"));
-		} catch (AccumuloException | TableNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+	public static Key read(Text end, Connector conn) {
 
 		try {
 
-			// Range r = new Range();
 			Authorizations auths = new Authorizations();
 			Scanner scan = conn.createScanner("ruks_SPATIAL_VECTOR_IDX", auths);
+			scan.setRange(new Range(end, null));
+			IteratorSetting itSettings = new IteratorSetting(1,
+					WholeRowIterator.class);
+			scan.addScanIterator(itSettings);
 
-			System.out.println(scan.getBatchSize());
+			int j = 0;
+			Key i = null;
 			for (Entry<Key, Value> entry : scan) {
 				Key k = entry.getKey();
-				Value v = entry.getValue();
-				// System.out.println(k);
+				if (j++ == 1) {
+					return k;
+				}
 			}
-			System.out.println("finished");
+			return i;
 
 		} catch (TableNotFoundException e) { // TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 
 	}
