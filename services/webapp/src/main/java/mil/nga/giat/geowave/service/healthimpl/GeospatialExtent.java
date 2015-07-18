@@ -113,6 +113,7 @@ public class GeospatialExtent {
 			String loc1 = tl.locateTablet(ctx, ke1.getEndRow(), false, false).tablet_location;
 			System.out.println(loc1);
 			Range r1 = new Range(list.get(0), ke1.getEndRow());
+
 			// TabletId id1=new TabletIdImpl(ke1);
 			// System.out.println(id1);
 
@@ -123,6 +124,7 @@ public class GeospatialExtent {
 			String loc2 = tl.locateTablet(ctx, ke2.getEndRow(), false, false).tablet_location;
 			System.out.println(loc2);
 			Range r2 = new Range(list.get(1), ke2.getEndRow());
+			System.out.println();
 
 			TabletLocation tt3 = tl
 					.locateTablet(ctx, list.get(2), false, false);
@@ -132,13 +134,21 @@ public class GeospatialExtent {
 			System.out.println(loc3);
 			Range r3 = new Range(list.get(2), ke3.getEndRow());
 
-			Text fRow = read(list.get(0), conn).getRow();
-			TabletLocation tt0 = tl.locateTablet(ctx, fRow, false, false);
+			Text first, last;
+			Key[] kk = read(list.get(2), conn, tl, ctx);
+			first = kk[0].getRow();
+			last = kk[1].getRow();
+			TabletLocation tt0 = tl.locateTablet(ctx, first, false, false);
 			System.out.println(tt0.tablet_location);
 			KeyExtent ke0 = tt0.tablet_extent;
-			String loc0 = tl.locateTablet(ctx, ke0.getEndRow(), false, false).tablet_location;
+			String loc0 = tl.locateTablet(ctx, last, false, false).tablet_location;
 			System.out.println(loc0);
-			Range r0 = new Range(fRow, ke0.getEndRow());
+			Range r0 = new Range(first, last);
+
+			System.out.println(ke0.getUUID());
+			System.out.println(ke1.getUUID());
+			System.out.println(ke2.getUUID());
+			System.out.println(ke3.getUUID());
 
 		} catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
@@ -149,7 +159,8 @@ public class GeospatialExtent {
 		}
 	}
 
-	public static Key read(Text end, Connector conn) {
+	public static Key[] read(Text end, Connector conn, TabletLocator tl,
+			ClientContext ctx) {
 
 		try {
 
@@ -161,14 +172,16 @@ public class GeospatialExtent {
 			scan.addScanIterator(itSettings);
 
 			int j = 0;
-			Key i = null;
+			Key first = null, last;
+			Key k = null;
 			for (Entry<Key, Value> entry : scan) {
-				Key k = entry.getKey();
+				k = entry.getKey();
 				if (j++ == 1) {
-					return k;
+					first = k;
 				}
 			}
-			return i;
+			last = k;
+			return new Key[] { first, last };
 
 		} catch (TableNotFoundException e) { // TODO Auto-generated catch block
 			e.printStackTrace();
