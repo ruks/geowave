@@ -40,10 +40,8 @@ public class GeospatialExtent {
 		Connector conn;
 		AuthenticationToken authToken = new PasswordToken("password");
 		conn = inst.getConnector("root", authToken);
-		// addSplits(conn);
-		getSplits(conn, inst);
-		// read();
-		// t.delete(testTname);
+		 addSplits(conn);
+//		getSplits(conn, inst);
 	}
 
 	public static void addSplits(Connector conn) {
@@ -87,68 +85,49 @@ public class GeospatialExtent {
 	public static void getSplits(Connector conn, Instance inst) {
 		TableOperations op = conn.tableOperations();
 		System.out.println(op.tableIdMap());
+		String table = "ruks_SPATIAL_VECTOR_IDX";
+		String tid = op.tableIdMap().get("ruks_SPATIAL_VECTOR_IDX");
 
 		try {
-			List<Text> list = new ArrayList<Text>(
-					op.listSplits("ruks_SPATIAL_VECTOR_IDX"));
+			List<Text> list = new ArrayList<Text>(op.listSplits(table));
 			System.out.println(list.size());
-
-			for (int i = 0; i < list.size(); i++) {
-				Key ke = new Key(list.get(i));
-
-			}
 
 			ClientConfiguration clientConf = ClientConfiguration.loadDefault();
 
 			Instance accInstance = inst;
 			ClientContext ctx = new ClientContext(accInstance, new Credentials(
 					"root", new PasswordToken("password")), clientConf);
-			TabletLocator tl = TabletLocator.getLocator(ctx, new Text("2"));
+			TabletLocator tl = TabletLocator.getLocator(ctx, new Text(tid));
 			System.out.println();
 
-			TabletLocation tt1 = tl
-					.locateTablet(ctx, list.get(0), false, false);
-			System.out.println(tt1.tablet_location);
-			KeyExtent ke1 = tt1.tablet_extent;
-			String loc1 = tl.locateTablet(ctx, ke1.getEndRow(), false, false).tablet_location;
-			System.out.println(loc1);
-			Range r1 = new Range(list.get(0), ke1.getEndRow());
-
-			// TabletId id1=new TabletIdImpl(ke1);
-			// System.out.println(id1);
-
-			TabletLocation tt2 = tl
-					.locateTablet(ctx, list.get(1), false, false);
-			System.out.println(tt2.tablet_location);
-			KeyExtent ke2 = tt2.tablet_extent;
-			String loc2 = tl.locateTablet(ctx, ke2.getEndRow(), false, false).tablet_location;
-			System.out.println(loc2);
-			Range r2 = new Range(list.get(1), ke2.getEndRow());
-			System.out.println();
-
-			TabletLocation tt3 = tl
-					.locateTablet(ctx, list.get(2), false, false);
-			System.out.println(tt3.tablet_location);
-			KeyExtent ke3 = tt3.tablet_extent;
-			String loc3 = tl.locateTablet(ctx, ke3.getEndRow(), false, false).tablet_location;
-			System.out.println(loc3);
-			Range r3 = new Range(list.get(2), ke3.getEndRow());
+			TabletLocation tt;
+			String loc;
+			Range r;
+			String uuid;
+			KeyExtent ke;
+			for (int i = 0; i < list.size(); i++) {
+				tt = tl.locateTablet(ctx, list.get(i), false, false);
+				System.out.println(tt.tablet_location);
+				ke = tt.tablet_extent;
+				loc = tl.locateTablet(ctx, ke.getEndRow(), false, false).tablet_location;
+				System.out.println(loc);
+				r = new Range(list.get(i), ke.getEndRow());
+				uuid = ke.getUUID().toString();
+				System.out.println(uuid);
+			}
 
 			Text first, last;
-			Key[] kk = read(list.get(2), conn, tl, ctx);
+			Key[] kk = read(list.get(list.size() - 1), conn, table);
 			first = kk[0].getRow();
 			last = kk[1].getRow();
-			TabletLocation tt0 = tl.locateTablet(ctx, first, false, false);
-			System.out.println(tt0.tablet_location);
-			KeyExtent ke0 = tt0.tablet_extent;
-			String loc0 = tl.locateTablet(ctx, last, false, false).tablet_location;
-			System.out.println(loc0);
-			Range r0 = new Range(first, last);
 
-			System.out.println(ke0.getUUID());
-			System.out.println(ke1.getUUID());
-			System.out.println(ke2.getUUID());
-			System.out.println(ke3.getUUID());
+			tt = tl.locateTablet(ctx, first, false, false);
+			System.out.println(tt.tablet_location);
+			ke = tt.tablet_extent;
+			loc = tl.locateTablet(ctx, last, false, false).tablet_location;
+			System.out.println(loc);
+			r = new Range(first, last);
+			System.out.println(ke.getUUID());
 
 		} catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
@@ -159,13 +138,12 @@ public class GeospatialExtent {
 		}
 	}
 
-	public static Key[] read(Text end, Connector conn, TabletLocator tl,
-			ClientContext ctx) {
+	public static Key[] read(Text end, Connector conn, String table) {
 
 		try {
 
 			Authorizations auths = new Authorizations();
-			Scanner scan = conn.createScanner("ruks_SPATIAL_VECTOR_IDX", auths);
+			Scanner scan = conn.createScanner(table, auths);
 			scan.setRange(new Range(end, null));
 			IteratorSetting itSettings = new IteratorSetting(1,
 					WholeRowIterator.class);
