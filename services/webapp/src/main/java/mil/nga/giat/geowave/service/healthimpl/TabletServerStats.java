@@ -19,11 +19,11 @@ import org.apache.accumulo.core.trace.Tracer;
 import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 
-public class TabletStats {
+public class TabletServerStats {
 	private List<TabletBean> tabletStats;
 	private MasterMonitorInfo masterMonitorInfo = null;
 
-	public TabletStats() throws Exception {
+	public TabletServerStats() throws Exception {
 
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
@@ -37,14 +37,11 @@ public class TabletStats {
 			client = MasterClient.getConnectionWithRetry(context);
 			masterMonitorInfo = client.getMasterStats(Tracer.traceInfo(),
 					context.rpcCreds());
-			List<String> li = client.getActiveTservers(Tracer.traceInfo(),
-					context.rpcCreds());
-			System.out.println(li);
-
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			return;
 		} finally {
+
 			if (client != null)
 				MasterClient.close(client);
 		}
@@ -53,8 +50,6 @@ public class TabletStats {
 
 	public List<TabletBean> getTabletStats() {
 		List<TabletServerStatus> tabs = masterMonitorInfo.getTServerInfo();
-
-		System.out.println(masterMonitorInfo.getTableMap());
 		tabletStats = new ArrayList<TabletBean>();
 
 		for (int i = 0; i < tabs.size(); i++) {
@@ -66,7 +61,6 @@ public class TabletStats {
 			long holdTime = 0;
 
 			Map<String, TableInfo> map = sta.getTableMap();
-
 			Set<String> key = map.keySet();
 
 			int entries = 0, ingest = 0, query = 0;
@@ -74,19 +68,36 @@ public class TabletStats {
 			Compacting minor = new Compacting(0, 0);
 			Compacting major = new Compacting(0, 0);
 
-			System.out.println(sta.getName());
-			System.out.println(sta);
-
 			Object[] arr = key.toArray();
 			for (int j = 0; j < arr.length; j++) {
+				TableInfo info = map.get(arr[j]);
+				entries += info.getRecs();
+				ingest += info.getIngestRate();
+				query += info.getQueryRate();
 
-				// TableInfo info = map.get(arr[j]);
-				// if (info.getTablets() > 1){
-				// System.out.println(info.getRecs());
-				// System.out.println(info);
-				// }
+				if (info.getScans() != null) {
+					scans.setRunning(info.getScans().getRunning());
+					scans.setQueued(info.getScans().getQueued());
+
+					minor.setRunning(info.getMinors().getRunning());
+					minor.setQueued(info.getMinors().getQueued());
+
+					major.setRunning(info.getMajors().getRunning());
+					major.setQueued(info.getMajors().getQueued());
+				}
 
 			}
+
+			double datacHits = sta.getDataCacheHits()
+					/ (sta.getDataCacheRequest() + 0.0);
+			double indexcHits = sta.getIndexCacheHits()
+					/ (sta.getIndexCacheRequest() + 0.0);
+
+			double osLoad = sta.getOsLoad();
+
+			tabletStats.add(new TabletBean(name, tablets, lastContact, entries,
+					ingest, query, holdTime, scans, minor, major, datacHits,
+					indexcHits, osLoad));
 
 		}
 
@@ -95,7 +106,7 @@ public class TabletStats {
 	}
 
 	public static void main(String[] args) throws Exception {
-		TabletStats stats = new TabletStats();
+		TabletServerStats stats = new TabletServerStats();
 		List<TabletBean> sta = stats.getTabletStats();
 		System.out.println(sta.size());
 	}
