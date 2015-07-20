@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
-import mil.nga.giat.geowave.service.jaxbbean.TabletServerBean;
 
 import org.apache.accumulo.core.client.ClientConfiguration;
 import org.apache.accumulo.core.client.Instance;
@@ -28,7 +27,7 @@ import org.apache.thrift.TException;
 
 import com.google.common.net.HostAndPort;
 
-public class Test {
+public class TabletStat {
 
 	MasterMonitorInfo inf = null;
 	AccumuloServerContext context;
@@ -36,7 +35,7 @@ public class Test {
 	MasterClientService.Iface c;
 	ClientContext ctx;
 
-	public Test() {
+	public TabletStat() {
 
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
@@ -63,7 +62,7 @@ public class Test {
 		return 0;
 	}
 
-	public List<TabletBean> getTabletStats(String tid,String tserver) {
+	public List<TabletBean> getTabletStats(String tid, String tserver) {
 
 		String table;
 		String tablet;
@@ -90,11 +89,7 @@ public class Test {
 		try {
 			TabletClientService.Client client = ThriftUtil.getClient(
 					new TabletClientService.Client.Factory(), address, ctx);
-			List<TabletStats> li = client.getTabletStats(Tracer.traceInfo(),
-					context.rpcCreds(), tid);
-			System.out.println(li.size());
-			System.out.println(li);
-
+			
 			List<TabletStats> tsStats = new ArrayList<TabletStats>();
 
 			for (String tableId : inf.tableMap.keySet()) {
@@ -153,7 +148,8 @@ public class Test {
 	}
 
 	public static void main(String[] args) {
-		Test t = new Test();
-		System.out.println(t.getTabletStats("2","rukshan-ThinkPad-T540p:50964").size());
+		TabletStat t = new TabletStat();
+		System.out.println(t
+				.getTabletStats("2", "rukshan-ThinkPad-T540p:50964").size());
 	}
 }

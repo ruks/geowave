@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
+import mil.nga.giat.geowave.service.jaxbbean.TabletServerBean;
 
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
@@ -20,7 +20,7 @@ import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 
 public class TabletServerStats {
-	private List<TabletBean> tabletStats;
+	private List<TabletServerBean> tabletStats;
 	private MasterMonitorInfo masterMonitorInfo = null;
 
 	public TabletServerStats() throws Exception {
@@ -48,9 +48,9 @@ public class TabletServerStats {
 
 	}
 
-	public List<TabletBean> getTabletStats() {
+	public List<TabletServerBean> getTabletStats() {
 		List<TabletServerStatus> tabs = masterMonitorInfo.getTServerInfo();
-		tabletStats = new ArrayList<TabletBean>();
+		tabletStats = new ArrayList<TabletServerBean>();
 
 		for (int i = 0; i < tabs.size(); i++) {
 			TabletServerStatus sta = tabs.get(i);
@@ -95,7 +95,7 @@ public class TabletServerStats {
 
 			double osLoad = sta.getOsLoad();
 
-			tabletStats.add(new TabletBean(name, tablets, lastContact, entries,
+			tabletStats.add(new TabletServerBean(name, tablets, lastContact, entries,
 					ingest, query, holdTime, scans, minor, major, datacHits,
 					indexcHits, osLoad));
 
@@ -107,7 +107,7 @@ public class TabletServerStats {
 
 	public static void main(String[] args) throws Exception {
 		TabletServerStats stats = new TabletServerStats();
-		List<TabletBean> sta = stats.getTabletStats();
+		List<TabletServerBean> sta = stats.getTabletStats();
 		System.out.println(sta.size());
 	}
 }

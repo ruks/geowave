@@ -1,167 +1,122 @@
 package mil.nga.giat.geowave.service.jaxbbean;
 
-import org.apache.accumulo.core.master.thrift.Compacting;
+public class TabletBean {
 
-public class TabletBean
-{
-	private String name;
-	private int tablets;
-	private long lastContact;
-	private int entries = 0;
-	private int ingest = 0;
-	private int query = 0;
-	private long holdTime;
-	private Compacting scans;
-	private Compacting minor;
-	private Compacting major;
-	private double datacHits;
-	private double indexcHits;
-	private double osLoad;
+	private String table;
+	private String tablet;
+	private long entries;
+	private double ingest;
+	private double query;
+	private double miAvg;
+	private double mistd;
+	private double miAvges;
+	private double maAvg;
+	private double mastd;
+	private double maAvges;
 
-	public TabletBean(
-			String name,
-			int tablets,
-			long lastContact,
-			int entries,
-			int ingest,
-			int query,
-			long holdTime,
-			Compacting scans,
-			Compacting minor,
-			Compacting major,
-			double datacHits,
-			double indexcHits,
-			double osLoad ) {
+	public TabletBean(String table, String tablet, long entries, double ingest,
+			double query, double miAvg, double mistd, double miAvges,
+			double maAvg, double mastd, double maAvges) {
 		super();
-		this.name = name;
-		this.tablets = tablets;
-		this.lastContact = lastContact;
+		this.table = table;
+		this.tablet = tablet;
 		this.entries = entries;
 		this.ingest = ingest;
 		this.query = query;
-		this.holdTime = holdTime;
-		this.scans = scans;
-		this.minor = minor;
-		this.major = major;
-		this.datacHits = datacHits;
-		this.indexcHits = indexcHits;
-		this.osLoad = osLoad;
+		this.miAvg = miAvg;
+		this.mistd = mistd;
+		this.miAvges = miAvges;
+		this.maAvg = maAvg;
+		this.mastd = mastd;
+		this.maAvges = maAvges;
 	}
 
-	public long getHoldTime() {
-		return holdTime;
+	public String getTable() {
+		return table;
 	}
 
-	public void setHoldTime(
-			long holdTime ) {
-		this.holdTime = holdTime;
+	public void setTable(String table) {
+		this.table = table;
 	}
 
-	public double getOsLoad() {
-		return osLoad;
+	public String getTablet() {
+		return tablet;
 	}
 
-	public void setOsLoad(
-			double osLoad ) {
-		this.osLoad = osLoad;
+	public void setTablet(String tablet) {
+		this.tablet = tablet;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(
-			String name ) {
-		this.name = name;
-	}
-
-	public int getTablets() {
-		return tablets;
-	}
-
-	public void setTablets(
-			int tablets ) {
-		this.tablets = tablets;
-	}
-
-	public long getLastContact() {
-		return lastContact;
-	}
-
-	public void setLastContact(
-			long lastContact ) {
-		this.lastContact = lastContact;
-	}
-
-	public double getDatacHits() {
-		return datacHits;
-	}
-
-	public void setDatacHits(
-			double datacHits ) {
-		this.datacHits = datacHits;
-	}
-
-	public double getIndexcHits() {
-		return indexcHits;
-	}
-
-	public void setIndexcHits(
-			double indexcHits ) {
-		this.indexcHits = indexcHits;
-	}
-
-	public void setQuery(
-			int query ) {
-		this.query = query;
-	}
-
-	public void setScans(
-			Compacting scans ) {
-		this.scans = scans;
-	}
-
-	public void setMinor(
-			Compacting minor ) {
-		this.minor = minor;
-	}
-
-	public int getEntries() {
+	public long getEntries() {
 		return entries;
 	}
 
-	public void setEntries(
-			int entries ) {
+	public void setEntries(long entries) {
 		this.entries = entries;
 	}
 
-	public int getIngest() {
+	public double getIngest() {
 		return ingest;
 	}
 
-	public void setIngest(
-			int ingest ) {
+	public void setIngest(double ingest) {
 		this.ingest = ingest;
 	}
 
-	public Compacting getMajor() {
-		return major;
-	}
-
-	public void setMajor(
-			Compacting major ) {
-		this.major = major;
-	}
-
-	public int getQuery() {
+	public double getQuery() {
 		return query;
 	}
 
-	public Compacting getScans() {
-		return scans;
+	public void setQuery(double query) {
+		this.query = query;
 	}
 
-	public Compacting getMinor() {
-		return minor;
+	public double getMiAvg() {
+		return miAvg;
 	}
+
+	public void setMiAvg(double miAvg) {
+		this.miAvg = miAvg;
+	}
+
+	public double getMistd() {
+		return mistd;
+	}
+
+	public void setMistd(double mistd) {
+		this.mistd = mistd;
+	}
+
+	public double getMiAvges() {
+		return miAvges;
+	}
+
+	public void setMiAvges(double miAvges) {
+		this.miAvges = miAvges;
+	}
+
+	public double getMaAvg() {
+		return maAvg;
+	}
+
+	public void setMaAvg(double maAvg) {
+		this.maAvg = maAvg;
+	}
+
+	public double getMastd() {
+		return mastd;
+	}
+
+	public void setMastd(double mastd) {
+		this.mastd = mastd;
+	}
+
+	public double getMaAvges() {
+		return maAvges;
+	}
+
+	public void setMaAvges(double maAvges) {
+		this.maAvges = maAvges;
+	}
+
 }

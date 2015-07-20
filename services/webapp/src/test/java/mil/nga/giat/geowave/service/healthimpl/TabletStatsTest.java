@@ -6,8 +6,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TabletStatsTest
-{
+public class TabletStatsTest {
 
 	@BeforeClass
 	public void ingest() {
@@ -15,19 +14,17 @@ public class TabletStatsTest
 	}
 
 	@Test
-	public void testTabletCount()
-			throws Exception {
-		TabletStats stat = new TabletStats();
-		Assert.assertTrue(stat.getTabletStats().size() > 0);
+	public void testTabletCount() throws Exception {
+		TabletStat stat = new TabletStat();
+		Assert.assertTrue(stat.getTabletStats("2",
+				"rukshan-ThinkPad-T540p:50964").size() > 0);
 	}
 
 	@Test
-	public void testTablets()
-			throws Exception {
+	public void testTablets() throws Exception {
 
-		TabletStats stat = new TabletStats();
-		TabletBean tabletStat = stat.getTabletStats().get(
-				0);
+		TabletStat stat = new TabletStat();
+		TabletBean tabletStat = stat.getTabletStats("2", "rukshan-ThinkPad-T540p:50964").get(0);
 		Assert.assertNotNull(tabletStat);
 	}
 
