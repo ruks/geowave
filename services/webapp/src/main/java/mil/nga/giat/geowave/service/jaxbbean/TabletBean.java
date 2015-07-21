@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.service.jaxbbean;
 
-public class TabletBean {
+public class TabletBean
+{
 
 	private String table;
 	private String tablet;
@@ -14,9 +15,18 @@ public class TabletBean {
 	private double mastd;
 	private double maAvges;
 
-	public TabletBean(String table, String tablet, long entries, double ingest,
-			double query, double miAvg, double mistd, double miAvges,
-			double maAvg, double mastd, double maAvges) {
+	public TabletBean(
+			String table,
+			String tablet,
+			long entries,
+			double ingest,
+			double query,
+			double miAvg,
+			double mistd,
+			double miAvges,
+			double maAvg,
+			double mastd,
+			double maAvges ) {
 		super();
 		this.table = table;
 		this.tablet = tablet;
@@ -35,7 +45,8 @@ public class TabletBean {
 		return table;
 	}
 
-	public void setTable(String table) {
+	public void setTable(
+			String table ) {
 		this.table = table;
 	}
 
@@ -43,7 +54,8 @@ public class TabletBean {
 		return tablet;
 	}
 
-	public void setTablet(String tablet) {
+	public void setTablet(
+			String tablet ) {
 		this.tablet = tablet;
 	}
 
@@ -51,7 +63,8 @@ public class TabletBean {
 		return entries;
 	}
 
-	public void setEntries(long entries) {
+	public void setEntries(
+			long entries ) {
 		this.entries = entries;
 	}
 
@@ -59,7 +72,8 @@ public class TabletBean {
 		return ingest;
 	}
 
-	public void setIngest(double ingest) {
+	public void setIngest(
+			double ingest ) {
 		this.ingest = ingest;
 	}
 
@@ -67,7 +81,8 @@ public class TabletBean {
 		return query;
 	}
 
-	public void setQuery(double query) {
+	public void setQuery(
+			double query ) {
 		this.query = query;
 	}
 
@@ -75,7 +90,8 @@ public class TabletBean {
 		return miAvg;
 	}
 
-	public void setMiAvg(double miAvg) {
+	public void setMiAvg(
+			double miAvg ) {
 		this.miAvg = miAvg;
 	}
 
@@ -83,7 +99,8 @@ public class TabletBean {
 		return mistd;
 	}
 
-	public void setMistd(double mistd) {
+	public void setMistd(
+			double mistd ) {
 		this.mistd = mistd;
 	}
 
@@ -91,7 +108,8 @@ public class TabletBean {
 		return miAvges;
 	}
 
-	public void setMiAvges(double miAvges) {
+	public void setMiAvges(
+			double miAvges ) {
 		this.miAvges = miAvges;
 	}
 
@@ -99,7 +117,8 @@ public class TabletBean {
 		return maAvg;
 	}
 
-	public void setMaAvg(double maAvg) {
+	public void setMaAvg(
+			double maAvg ) {
 		this.maAvg = maAvg;
 	}
 
@@ -107,7 +126,8 @@ public class TabletBean {
 		return mastd;
 	}
 
-	public void setMastd(double mastd) {
+	public void setMastd(
+			double mastd ) {
 		this.mastd = mastd;
 	}
 
@@ -115,7 +135,8 @@ public class TabletBean {
 		return maAvges;
 	}
 
-	public void setMaAvges(double maAvges) {
+	public void setMaAvges(
+			double maAvges ) {
 		this.maAvges = maAvges;
 	}
 

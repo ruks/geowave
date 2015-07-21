@@ -19,31 +19,38 @@ import org.apache.accumulo.core.trace.Tracer;
 import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 
-public class TabletServerStats {
+public class TabletServerStats
+{
 	private List<TabletServerBean> tabletStats;
 	private MasterMonitorInfo masterMonitorInfo = null;
 
-	public TabletServerStats() throws Exception {
+	public TabletServerStats()
+			throws Exception {
 
 		String instanceName = "geowave";
 		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
 
 		MasterClientService.Iface client = null;
 
 		try {
 			AccumuloServerContext context = new AccumuloServerContext(
-					new ServerConfigurationFactory(inst));
+					new ServerConfigurationFactory(
+							inst));
 			client = MasterClient.getConnectionWithRetry(context);
-			masterMonitorInfo = client.getMasterStats(Tracer.traceInfo(),
+			masterMonitorInfo = client.getMasterStats(
+					Tracer.traceInfo(),
 					context.rpcCreds());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			System.out.println(e.getMessage());
 			return;
-		} finally {
+		}
+		finally {
 
-			if (client != null)
-				MasterClient.close(client);
+			if (client != null) MasterClient.close(client);
 		}
 
 	}
@@ -64,9 +71,15 @@ public class TabletServerStats {
 			Set<String> key = map.keySet();
 
 			int entries = 0, ingest = 0, query = 0;
-			Compacting scans = new Compacting(0, 0);
-			Compacting minor = new Compacting(0, 0);
-			Compacting major = new Compacting(0, 0);
+			Compacting scans = new Compacting(
+					0,
+					0);
+			Compacting minor = new Compacting(
+					0,
+					0);
+			Compacting major = new Compacting(
+					0,
+					0);
 
 			Object[] arr = key.toArray();
 			for (int j = 0; j < arr.length; j++) {
@@ -88,16 +101,25 @@ public class TabletServerStats {
 
 			}
 
-			double datacHits = sta.getDataCacheHits()
-					/ (sta.getDataCacheRequest() + 0.0);
-			double indexcHits = sta.getIndexCacheHits()
-					/ (sta.getIndexCacheRequest() + 0.0);
+			double datacHits = sta.getDataCacheHits() / (sta.getDataCacheRequest() + 0.0);
+			double indexcHits = sta.getIndexCacheHits() / (sta.getIndexCacheRequest() + 0.0);
 
 			double osLoad = sta.getOsLoad();
 
-			tabletStats.add(new TabletServerBean(name, tablets, lastContact, entries,
-					ingest, query, holdTime, scans, minor, major, datacHits,
-					indexcHits, osLoad));
+			tabletStats.add(new TabletServerBean(
+					name,
+					tablets,
+					lastContact,
+					entries,
+					ingest,
+					query,
+					holdTime,
+					scans,
+					minor,
+					major,
+					datacHits,
+					indexcHits,
+					osLoad));
 
 		}
 
@@ -105,7 +127,9 @@ public class TabletServerStats {
 
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(
+			String[] args )
+			throws Exception {
 		TabletServerStats stats = new TabletServerStats();
 		List<TabletServerBean> sta = stats.getTabletStats();
 		System.out.println(sta.size());
