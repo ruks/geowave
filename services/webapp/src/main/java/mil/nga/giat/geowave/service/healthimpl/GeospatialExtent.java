@@ -60,10 +60,11 @@ public class GeospatialExtent {
 
 	public static void main(String[] args) throws Exception {
 
-		getTabletPolygon(table);
+		GeospatialExtent ex = new GeospatialExtent();
+		ex.getTabletPolygon(table);
 	}
 
-	public static void getTabletPolygon(String table) {
+	public void getTabletPolygon(String table) {
 
 		Instance accInstance = new ZooKeeperInstance(instanceName, zooServers);
 		AuthenticationToken authToken = new PasswordToken(password);
@@ -79,12 +80,11 @@ public class GeospatialExtent {
 		List<Range> splits = getSplits(connector, accInstance);
 		System.out.println("splits " + splits.size());
 		for (Range range : splits) {
-			extent(table, range, connector);
+			this.extent(table, range, connector);
 		}
 	}
 
-	private static List<Range> getSplits(Connector connector,
-			Instance accInstance) {
+	private List<Range> getSplits(Connector connector, Instance accInstance) {
 		TableOperations op = connector.tableOperations();
 		System.out.println(op.tableIdMap());
 
@@ -121,7 +121,7 @@ public class GeospatialExtent {
 			}
 
 			Text first, last;
-			Key[] kk = read(list.get(list.size() - 1), table, connector);
+			Key[] kk = this.read(list.get(list.size() - 1), table, connector);
 			first = kk[0].getRow();
 			last = kk[1].getRow();
 
@@ -146,7 +146,7 @@ public class GeospatialExtent {
 		return ranges;
 	}
 
-	private static Key[] read(Text end, String table, Connector connector) {
+	private Key[] read(Text end, String table, Connector connector) {
 
 		try {
 
@@ -178,7 +178,7 @@ public class GeospatialExtent {
 
 	}
 
-	private static void extent(String table, Range range, Connector connector) {
+	private void extent(String table, Range range, Connector connector) {
 
 		Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 
