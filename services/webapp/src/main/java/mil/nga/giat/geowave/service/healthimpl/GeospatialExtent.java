@@ -4,20 +4,19 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import mil.nga.giat.geowave.accumulo.AccumuloOperations;
-import mil.nga.giat.geowave.accumulo.BasicAccumuloOperations;
-import mil.nga.giat.geowave.accumulo.metadata.AccumuloAdapterStore;
-import mil.nga.giat.geowave.accumulo.util.AccumuloUtils;
+import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloRowId;
-//import mil.nga.giat.geowave.core.geotime.IndexType;
-import mil.nga.giat.geowave.index.ByteArrayId;
-import mil.nga.giat.geowave.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.store.index.Index;
-import mil.nga.giat.geowave.store.index.IndexType;
-//import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
+import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
+import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
 import mil.nga.giat.geowave.vector.adapter.FeatureDataAdapter;
 
 import org.apache.accumulo.core.client.AccumuloException;
@@ -43,12 +42,21 @@ import org.apache.accumulo.core.data.impl.KeyExtent;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.geotools.feature.AttributeTypeBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.geometry.Geometry;
+
+import com.vividsolutions.jts.algorithm.ConvexHull;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class GeospatialExtent {
+
+	private static final Logger logger = LogManager
+			.getLogger(GeospatialExtent.class);
 
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
@@ -131,7 +139,8 @@ public class GeospatialExtent {
 				loc = tl.locateTablet(ctx, ke.getEndRow(), false, false).tablet_location;
 				System.out.println(loc);
 				r = new Range(list.get(i), ke.getEndRow());
-				ranges.add(r);
+				// ranges.add(r);
+				ranges.add(ke.toDataRange());
 				uuid = ke.getUUID().toString();
 				System.out.println(uuid);
 			}
@@ -150,7 +159,9 @@ public class GeospatialExtent {
 			ranges.add(r);
 			System.out.println(ke.getUUID());
 
-			extent(conn, table, ranges.get(ranges.size() - 1), accInstance);
+			System.out.println(ranges.get(0));
+			// extent(conn, table, ranges.get(ranges.size() - 1), accInstance);
+			extent(conn, table, ranges.get(0), accInstance);
 		} catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -204,19 +215,32 @@ public class GeospatialExtent {
 					WholeRowIterator.class);
 			scan.addScanIterator(itSettings);
 
-			FeatureDataAdapter s = null;
+			ArrayList<Object> list = new ArrayList<Object>();
 			for (Entry<Key, Value> entry : scan) {
 				AccumuloRowId id = new AccumuloRowId(entry.getKey());
 				ByteArrayId bid = new ByteArrayId(id.getAdapterId());
 
-				AccumuloOperations ao = new BasicAccumuloOperations(conn);
+				AccumuloOperations ao = new BasicAccumuloOperations(conn,
+						"ruks");
 				AccumuloAdapterStore a = new AccumuloAdapterStore(ao);
 				DataAdapter<?> adapter = a.getAdapter(bid);
 
-				Object o=AccumuloUtils.decodeRow(entry.getKey(), entry.getValue(),
-						adapter, index);
+				Object o = AccumuloUtils.decodeRow(entry.getKey(),
+						entry.getValue(), adapter, index);
+
+				list.add(o);
+
 				System.out.println(o);
 			}
+			Coordinate[] cloud = new Coordinate[10];
+			Random rand = new Random();
+			for (int i = 0; i < cloud.length; i++) {
+				cloud[i] = new Coordinate(100 + 50 * rand.nextDouble(),
+						100 + 50 * rand.nextDouble());
+			}
+			ConvexHull c = new ConvexHull(cloud, new GeometryFactory());
+			Geometry geometry = c.getConvexHull();
+			System.out.println(geometry.getNumPoints());
 
 		} catch (TableNotFoundException e) { // TODO Auto-generated catch block
 			e.printStackTrace();
