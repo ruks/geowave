@@ -120,6 +120,11 @@
 				<artifactId>accumulo-trace</artifactId>
 				<version>1.7.0</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.accumulo</groupId>
+				<artifactId>accumulo-minicluster</artifactId>
+				<version>1.7.0</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

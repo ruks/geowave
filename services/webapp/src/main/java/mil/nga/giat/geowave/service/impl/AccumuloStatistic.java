@@ -17,8 +17,7 @@ import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
  * Root resource (exposed at "stat" path)
  */
 @Path("stat")
-public class AccumuloStatistic
-{
+public class AccumuloStatistic {
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
@@ -32,22 +31,25 @@ public class AccumuloStatistic
 
 		TableStats stat;
 		try {
-			stat = new TableStats();
-		}
-		catch (Exception e) {
+			String instanceName = "geowave";
+			String zooServers = "127.0.0.1";
+			String user = "root";
+			String pass = "password";
+
+			stat = new TableStats(instanceName, zooServers, user, pass);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 		List<TableBean> list = stat.getTableStat();
 
-		return Response.ok().entity(
-				list).header(
-				"Access-Control-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		return Response
+				.ok()
+				.entity(list)
+				.header("Access-Control-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 
 	@GET
@@ -57,23 +59,24 @@ public class AccumuloStatistic
 
 		TabletStat stat;
 		try {
-			stat = new TabletStat();
-		}
-		catch (Exception e) {
+			String instanceName = "geowave";
+			String zooServers = "127.0.0.1";
+			String user = "root";
+			String pass = "password";
+			stat = new TabletStat(instanceName, zooServers, user, pass);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
-		List<TabletBean> list = stat.getTabletStats(
-				"2",
+		List<TabletBean> list = stat.getTabletStats("2",
 				"rukshan-ThinkPad-T540p:55358");
 
-		return Response.ok().entity(
-				list).header(
-				"Access-Control-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		return Response
+				.ok()
+				.entity(list)
+				.header("Access-Control-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 }

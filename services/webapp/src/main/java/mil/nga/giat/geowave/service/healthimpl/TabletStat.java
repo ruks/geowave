@@ -28,8 +28,7 @@ import org.apache.thrift.TException;
 
 import com.google.common.net.HostAndPort;
 
-public class TabletStat
-{
+public class TabletStat {
 
 	MasterMonitorInfo inf = null;
 	AccumuloServerContext context;
@@ -37,38 +36,25 @@ public class TabletStat
 	MasterClientService.Iface c;
 	ClientContext ctx;
 
-	public TabletStat() {
+	public TabletStat(String instanceName, String zooServers, String user,
+			String pass) {
 
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(
-				instanceName,
-				zooServers);
+		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
 		Instance accInstance = inst;
 		ClientConfiguration clientConf = ClientConfiguration.loadDefault();
-		ctx = new ClientContext(
-				accInstance,
-				new Credentials(
-						"root",
-						new PasswordToken(
-								"password")),
-				clientConf);
+		ctx = new ClientContext(accInstance, new Credentials(user,
+				new PasswordToken(pass)), clientConf);
 
 		ServerConfigurationFactory config;
 
-		config = new ServerConfigurationFactory(
-				inst);
-		context = new AccumuloServerContext(
-				config);
+		config = new ServerConfigurationFactory(inst);
+		context = new AccumuloServerContext(config);
 
 		c = MasterClient.getConnectionWithRetry(context);
 
 	}
 
-	private static double stddev(
-			double elapsed,
-			double num,
-			double sumDev ) {
+	private static double stddev(double elapsed, double num, double sumDev) {
 		if (num != 0) {
 			double average = elapsed / num;
 			return Math.sqrt((sumDev / num) - (average * average));
@@ -76,9 +62,7 @@ public class TabletStat
 		return 0;
 	}
 
-	public List<TabletBean> getTabletStats(
-			String tid,
-			String tserver ) {
+	public List<TabletBean> getTabletStats(String tid, String tserver) {
 
 		String table;
 		String tablet;
@@ -96,28 +80,21 @@ public class TabletStat
 		List<TabletBean> stat = new ArrayList<TabletBean>();
 
 		try {
-			inf = c.getMasterStats(
-					Tracer.traceInfo(),
-					context.rpcCreds());
-		}
-		catch (TException e1) {
+			inf = c.getMasterStats(Tracer.traceInfo(), context.rpcCreds());
+		} catch (TException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			TabletClientService.Client client = ThriftUtil.getClient(
-					new TabletClientService.Client.Factory(),
-					address,
-					ctx);
+					new TabletClientService.Client.Factory(), address, ctx);
 
 			List<TabletStats> tsStats = new ArrayList<TabletStats>();
 
 			for (String tableId : inf.tableMap.keySet()) {
-				tsStats.addAll(client.getTabletStats(
-						Tracer.traceInfo(),
-						context.rpcCreds(),
-						tableId));
+				tsStats.addAll(client.getTabletStats(Tracer.traceInfo(),
+						context.rpcCreds(), tableId));
 			}
 
 			for (TabletStats info : tsStats) {
@@ -126,18 +103,17 @@ public class TabletStat
 					continue;
 				}
 
-				KeyExtent extent = new KeyExtent(
-						info.extent);
+				KeyExtent extent = new KeyExtent(info.extent);
 				String tableId = extent.getTableId().toString();
 
 				MessageDigest digester = MessageDigest.getInstance("MD5");
-				if (extent.getEndRow() != null && extent.getEndRow().getLength() > 0) {
-					digester.update(
-							extent.getEndRow().getBytes(),
-							0,
-							extent.getEndRow().getLength());
+				if (extent.getEndRow() != null
+						&& extent.getEndRow().getLength() > 0) {
+					digester.update(extent.getEndRow().getBytes(), 0, extent
+							.getEndRow().getLength());
 				}
-				String obscuredExtent = Base64.encodeBase64String(digester.digest());
+				String obscuredExtent = Base64.encodeBase64String(digester
+						.digest());
 
 				table = tableId;
 				tablet = obscuredExtent;
@@ -146,34 +122,23 @@ public class TabletStat
 				ingest = info.ingestRate;
 				query = info.queryRate;
 
-				miAvg = info.minors.num != 0 ? info.minors.elapsed / info.minors.num : 0;
-				mistd = stddev(
-						info.minors.elapsed,
-						info.minors.num,
+				miAvg = info.minors.num != 0 ? info.minors.elapsed
+						/ info.minors.num : 0;
+				mistd = stddev(info.minors.elapsed, info.minors.num,
 						info.minors.sumDev);
-				miAvges = info.minors.elapsed != 0 ? info.minors.count / info.minors.elapsed : 0;
-				maAvg = info.majors.num != 0 ? info.majors.elapsed / info.majors.num : 0;
-				mastd = stddev(
-						info.majors.elapsed,
-						info.majors.num,
+				miAvges = info.minors.elapsed != 0 ? info.minors.count
+						/ info.minors.elapsed : 0;
+				maAvg = info.majors.num != 0 ? info.majors.elapsed
+						/ info.majors.num : 0;
+				mastd = stddev(info.majors.elapsed, info.majors.num,
 						info.majors.sumDev);
-				maAvges = info.majors.elapsed != 0 ? info.majors.count / info.majors.elapsed : 0;
-				stat.add(new TabletBean(
-						table,
-						tablet,
-						entries,
-						ingest,
-						query,
-						miAvg,
-						mistd,
-						miAvges,
-						maAvg,
-						mastd,
-						maAvges));
+				maAvges = info.majors.elapsed != 0 ? info.majors.count
+						/ info.majors.elapsed : 0;
+				stat.add(new TabletBean(table, tablet, entries, ingest, query,
+						miAvg, mistd, miAvges, maAvg, mastd, maAvges));
 			}
 
-		}
-		catch (NoSuchAlgorithmException | TException e) {
+		} catch (NoSuchAlgorithmException | TException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -182,11 +147,13 @@ public class TabletStat
 		return stat;
 	}
 
-	public static void main(
-			String[] args ) {
-		TabletStat t = new TabletStat();
-		System.out.println(t.getTabletStats(
-				"2",
-				"rukshan-ThinkPad-T540p:55358").size());
+	public static void main(String[] args) {
+		String instanceName = "geowave";
+		String zooServers = "127.0.0.1";
+		String user = "root";
+		String pass = "password";
+		TabletStat t = new TabletStat(instanceName, zooServers, user, pass);
+		System.out.println(t
+				.getTabletStats("2", "rukshan-ThinkPad-T540p:55358").size());
 	}
 }

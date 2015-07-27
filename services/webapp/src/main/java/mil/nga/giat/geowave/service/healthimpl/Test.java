@@ -1,73 +1,42 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.Map.Entry;
+import java.io.File;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
-import org.apache.hadoop.io.Text;
+import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 
-public class Test {
+import com.google.common.io.Files;
 
-	public static void main(String[] args) throws Exception {
+public class Test
+{
+
+	public static void main(
+			String[] args )
+			throws Exception {
 		// TODO Auto-generated method stub
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
-		Connector conn;
-		AuthenticationToken authToken = new PasswordToken("password");
-		conn = inst.getConnector("root", authToken);
-		addSplits(conn);
+		File tempDirectory = Files.createTempDir();
+		MiniAccumuloCluster accumulo = new MiniAccumuloCluster(
+				tempDirectory,
+				"password");
+
+		accumulo.start();
+
+		Instance instance = new ZooKeeperInstance(
+				accumulo.getInstanceName(),
+				accumulo.getZooKeepers());
+		Connector conn = instance.getConnector(
+				"root",
+				new PasswordToken(
+						"password"));
+
+		TableOperations to = conn.tableOperations();
+		to.create("rukshan");
+		System.out.println(to.list());
+		System.out.println(conn.whoami());
+
 	}
-
-	public static void addSplits(Connector conn) {
-		Authorizations auths = new Authorizations();
-		Scanner scan;
-		try {
-			scan = conn.createScanner("ruks_SPATIAL_VECTOR_IDX", auths);
-		} catch (TableNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			return;
-		}
-
-		System.out.println("size " + scan.getBatchSize());
-
-		TableOperations op = conn.tableOperations();
-
-		int cnt = 0;
-		SortedSet<Text> keys = new TreeSet<Text>();
-		for (Entry<Key, Value> entry : scan) {
-			Key k = entry.getKey();
-			if (cnt == 300) {
-				keys.add(k.getRow());
-			} else if (cnt == 600) {
-				keys.add(k.getRow());
-			} else if (cnt == 900) {
-				keys.add(k.getRow());
-			}
-			cnt++;
-		}
-
-		try {
-			op.addSplits("ruks_SPATIAL_VECTOR_IDX", keys);
-		} catch (TableNotFoundException | AccumuloException
-				| AccumuloSecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 }
