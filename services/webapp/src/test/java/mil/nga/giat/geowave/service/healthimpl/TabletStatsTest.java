@@ -2,6 +2,8 @@ package mil.nga.giat.geowave.service.healthimpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -15,12 +17,20 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
+import org.apache.accumulo.core.client.impl.MasterClient;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.master.thrift.MasterClientService;
+import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
+import org.apache.accumulo.core.master.thrift.TabletServerStatus;
 import org.apache.accumulo.core.security.ColumnVisibility;
+import org.apache.accumulo.core.trace.Tracer;
 import org.apache.accumulo.minicluster.impl.MiniAccumuloClusterImpl;
 import org.apache.accumulo.minicluster.impl.MiniAccumuloConfigImpl;
+import org.apache.accumulo.server.AccumuloServerContext;
+import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -110,14 +120,59 @@ public class TabletStatsTest {
 	public void testTablet() throws Exception {
 
 		TabletStat stats = new TabletStat(instanceName, zooServers, user, pass);
-		System.out.println(operation.getProperties(testTname));
 		String tid = operation.tableIdMap().get(testTname);
-		String tserver="";
-		for (TabletBean tablet : stats.getTabletStats(tid, tserver)) {
 
+		int tabs = 0;
+		List<String> tservers = getMasterStat(tid);
+		for (String serv : tservers) {
+			for (TabletBean tablet : stats.getTabletStats(tid, serv)) {
+				System.out.println(tablet.getTablet());
+				if (tablet.getTable().equals(tid)) {
+					tabs++;
+				}
+			}
+		}
+		Assert.assertEquals(tabs, 1);
+
+	}
+
+	public List<String> getMasterStat(String tid) throws AccumuloException,
+			AccumuloSecurityException, IOException, InterruptedException {
+
+		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		ArrayList<String> ts = new ArrayList<String>();
+		MasterClientService.Iface client = null;
+//		AuthenticationToken authToken = new PasswordToken(pass);
+		// Connector conn = inst.getConnector(user, authToken);
+		// String tid = conn.tableOperations().tableIdMap().get(testTname +
+		// "dd");
+		if (tid == null) {
+			return ts;
 		}
 		System.out.println(tid);
 
-		Assert.fail("table not found");
+		try {
+			AccumuloServerContext context = new AccumuloServerContext(
+					new ServerConfigurationFactory(inst));
+			client = MasterClient.getConnectionWithRetry(context);
+			MasterMonitorInfo masterMonitorInfo = client.getMasterStats(
+					Tracer.traceInfo(), context.rpcCreds());
+			System.out.println(masterMonitorInfo.getTServerInfo());
+			for (TabletServerStatus tss : masterMonitorInfo.getTServerInfo()) {
+				if (tss.tableMap.get(tid) != null) {
+					System.out.println(tss.getName());
+					ts.add(tss.getName());
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			return ts;
+		} finally {
+
+			if (client != null)
+				MasterClient.close(client);
+		}
+
+		return ts;
 	}
 }
