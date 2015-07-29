@@ -18,7 +18,6 @@ import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.client.impl.MasterClient;
-import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -41,7 +40,8 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 
-public class TabletStatsTest {
+public class TabletStatsTest
+{
 	static String testTname = "sampleTable";
 	static TableOperations operation;
 	static Connector conn;
@@ -55,19 +55,31 @@ public class TabletStatsTest {
 	@BeforeClass
 	public static void ingest() {
 
-		Logger.getRootLogger().setLevel(Level.WARN);
+		Logger.getRootLogger().setLevel(
+				Level.WARN);
 		try {
 
-			Text rowID = new Text("row1");
-			Text colFam = new Text("myColFam");
-			Text colQual = new Text("myColQual");
-			ColumnVisibility colVis = new ColumnVisibility("public");
+			Text rowID = new Text(
+					"row1");
+			Text colFam = new Text(
+					"myColFam");
+			Text colQual = new Text(
+					"myColQual");
+			ColumnVisibility colVis = new ColumnVisibility(
+					"public");
 			long timestamp = System.currentTimeMillis();
 
-			Value value = new Value("myValue".getBytes());
+			Value value = new Value(
+					"myValue".getBytes());
 
-			Mutation mutation = new Mutation(rowID);
-			mutation.put(colFam, colQual, colVis, timestamp, value);
+			Mutation mutation = new Mutation(
+					rowID);
+			mutation.put(
+					colFam,
+					colQual,
+					colVis,
+					timestamp,
+					value);
 
 			BatchWriterConfig config = new BatchWriterConfig();
 			config.setMaxMemory(10000000L); // bytes available to batchwriter
@@ -78,99 +90,158 @@ public class TabletStatsTest {
 			operation.create(testTname);
 
 			SortedSet<Text> keys = new TreeSet<Text>();
-			keys.add(new Text("r"));
+			keys.add(new Text(
+					"r"));
 
-			operation.addSplits(testTname, keys);
+			operation.addSplits(
+					testTname,
+					keys);
 
-			BatchWriter writer = conn.createBatchWriter(testTname, config);
+			BatchWriter writer = conn.createBatchWriter(
+					testTname,
+					config);
 			writer.addMutation(mutation);
 			writer.close();
 
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@AfterClass
-	public static void stopAccumulo() throws Exception {
+	public static void stopAccumulo()
+			throws Exception {
 		accumulo.stop();
 	}
 
-	public static Connector getInstance() throws IOException,
-			InterruptedException, AccumuloException, AccumuloSecurityException {
+	public static Connector getInstance()
+			throws IOException,
+			InterruptedException,
+			AccumuloException,
+			AccumuloSecurityException {
 
 		File tempDirectory = Files.createTempDir();
 
 		MiniAccumuloConfigImpl miniAccumuloConfig = new MiniAccumuloConfigImpl(
-				tempDirectory, pass).setNumTservers(2)
-				.setInstanceName(instanceName).setZooKeeperPort(2181);
+				tempDirectory,
+				pass).setNumTservers(
+				2).setInstanceName(
+				instanceName).setZooKeeperPort(
+				2181);
 
-		accumulo = new MiniAccumuloClusterImpl(miniAccumuloConfig);
+		accumulo = new MiniAccumuloClusterImpl(
+				miniAccumuloConfig);
 
 		accumulo.start();
 
-		Instance instance = new ZooKeeperInstance(accumulo.getInstanceName(),
+		Instance instance = new ZooKeeperInstance(
+				accumulo.getInstanceName(),
 				accumulo.getZooKeepers());
-		Connector conn = instance.getConnector(user, new PasswordToken(pass));
+		Connector conn = instance.getConnector(
+				user,
+				new PasswordToken(
+						pass));
 		return conn;
 	}
 
 	@Test
-	public void testTablet() throws Exception {
+	public void testTabletAfteraddSplit()
+			throws Exception {
 
-		TabletStat stats = new TabletStat(instanceName, zooServers, user, pass);
-		String tid = operation.tableIdMap().get(testTname);
+		TabletStat stats = new TabletStat(
+				instanceName,
+				zooServers,
+				user,
+				pass);
+		String tid = operation.tableIdMap().get(
+				testTname);
+
+		SortedSet<Text> splitkeys = new TreeSet<Text>();
+		splitkeys.add(new Text(
+				"r"));
+		splitkeys.add(new Text(
+				"c"));
+
+		operation.addSplits(
+				testTname,
+				splitkeys);
 
 		int tabs = 0;
-		List<String> tservers = getMasterStat(tid);
-		for (String serv : tservers) {
-			for (TabletBean tablet : stats.getTabletStats(tid, serv)) {
-				System.out.println(tablet.getTablet());
-				if (tablet.getTable().equals(tid)) {
-					tabs++;
-				}
+		for (TabletBean tablet : stats.getTabletStats(tid)) {
+			if (tablet.getTable().equals(
+					tid)) {
+				tabs++;
 			}
 		}
-		Assert.assertEquals(tabs, 1);
+		Assert.assertEquals(
+				tabs,
+				3);
 
 	}
 
-	public List<String> getMasterStat(String tid) throws AccumuloException,
-			AccumuloSecurityException, IOException, InterruptedException {
+	// @Test
+	public void testTablet()
+			throws Exception {
 
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		TabletStat stats = new TabletStat(
+				instanceName,
+				zooServers,
+				user,
+				pass);
+		String tid = operation.tableIdMap().get(
+				testTname);
+
+		int tabs = 0;
+		for (TabletBean tablet : stats.getTabletStats(tid)) {
+			if (tablet.getTable().equals(
+					tid)) {
+				tabs++;
+			}
+		}
+		Assert.assertEquals(
+				tabs,
+				1);
+	}
+
+	public List<String> getMasterStat(
+			String tid )
+			throws AccumuloException,
+			AccumuloSecurityException,
+			IOException,
+			InterruptedException {
+
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
 		ArrayList<String> ts = new ArrayList<String>();
 		MasterClientService.Iface client = null;
-//		AuthenticationToken authToken = new PasswordToken(pass);
-		// Connector conn = inst.getConnector(user, authToken);
-		// String tid = conn.tableOperations().tableIdMap().get(testTname +
-		// "dd");
 		if (tid == null) {
 			return ts;
 		}
-		System.out.println(tid);
 
 		try {
 			AccumuloServerContext context = new AccumuloServerContext(
-					new ServerConfigurationFactory(inst));
+					new ServerConfigurationFactory(
+							inst));
 			client = MasterClient.getConnectionWithRetry(context);
 			MasterMonitorInfo masterMonitorInfo = client.getMasterStats(
-					Tracer.traceInfo(), context.rpcCreds());
-			System.out.println(masterMonitorInfo.getTServerInfo());
+					Tracer.traceInfo(),
+					context.rpcCreds());
 			for (TabletServerStatus tss : masterMonitorInfo.getTServerInfo()) {
 				if (tss.tableMap.get(tid) != null) {
-					System.out.println(tss.getName());
 					ts.add(tss.getName());
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			System.out.println(e.getMessage());
 			return ts;
-		} finally {
+		}
+		finally {
 
-			if (client != null)
-				MasterClient.close(client);
+			if (client != null) MasterClient.close(client);
 		}
 
 		return ts;

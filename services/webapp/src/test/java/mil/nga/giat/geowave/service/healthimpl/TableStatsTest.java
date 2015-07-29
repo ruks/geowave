@@ -29,7 +29,8 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 
-public class TableStatsTest {
+public class TableStatsTest
+{
 
 	static String testTname = "sampleTable";
 	static TableOperations operation;
@@ -44,19 +45,31 @@ public class TableStatsTest {
 	@BeforeClass
 	public static void ingest() {
 
-		Logger.getRootLogger().setLevel(Level.WARN);
+		Logger.getRootLogger().setLevel(
+				Level.WARN);
 		try {
 
-			Text rowID = new Text("row1");
-			Text colFam = new Text("myColFam");
-			Text colQual = new Text("myColQual");
-			ColumnVisibility colVis = new ColumnVisibility("public");
+			Text rowID = new Text(
+					"row1");
+			Text colFam = new Text(
+					"myColFam");
+			Text colQual = new Text(
+					"myColQual");
+			ColumnVisibility colVis = new ColumnVisibility(
+					"public");
 			long timestamp = System.currentTimeMillis();
 
-			Value value = new Value("myValue".getBytes());
+			Value value = new Value(
+					"myValue".getBytes());
 
-			Mutation mutation = new Mutation(rowID);
-			mutation.put(colFam, colQual, colVis, timestamp, value);
+			Mutation mutation = new Mutation(
+					rowID);
+			mutation.put(
+					colFam,
+					colQual,
+					colVis,
+					timestamp,
+					value);
 
 			BatchWriterConfig config = new BatchWriterConfig();
 			config.setMaxMemory(10000000L); // bytes available to batchwriter
@@ -66,22 +79,31 @@ public class TableStatsTest {
 			operation = conn.tableOperations();
 			operation.create(testTname);
 
-			BatchWriter writer = conn.createBatchWriter(testTname, config);
+			BatchWriter writer = conn.createBatchWriter(
+					testTname,
+					config);
 			writer.addMutation(mutation);
 			writer.close();
 
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@Test
-	public void testTable() throws Exception {
+	public void testTable()
+			throws Exception {
 
-		TableStats stats = new TableStats(instanceName, zooServers, user, pass);
+		TableStats stats = new TableStats(
+				instanceName,
+				zooServers,
+				user,
+				pass);
 		for (TableBean table : stats.getTableStat()) {
-			if (table.getTableName().equals(testTname)) {
+			if (table.getTableName().equals(
+					testTname)) {
 				Assert.assertTrue(true);
 				return;
 			}
@@ -90,16 +112,27 @@ public class TableStatsTest {
 	}
 
 	@Test
-	public void testTableCount() throws Exception {
-		TableStats stats = new TableStats(instanceName, zooServers, user, pass);
+	public void testTableCount()
+			throws Exception {
+		TableStats stats = new TableStats(
+				instanceName,
+				zooServers,
+				user,
+				pass);
 		Assert.assertTrue(stats.getTableStat().size() > 1);
 	}
 
 	@Test
-	public void testTables() throws Exception {
-		TableStats stats = new TableStats(instanceName, zooServers, user, pass);
+	public void testTables()
+			throws Exception {
+		TableStats stats = new TableStats(
+				instanceName,
+				zooServers,
+				user,
+				pass);
 		for (TableBean table : stats.getTableStat()) {
-			if (table.getTableName().equals(testTname)) {
+			if (table.getTableName().equals(
+					testTname)) {
 				// Assert.assertTrue();
 				System.out.println(table.getEntries());
 				return;
@@ -110,26 +143,38 @@ public class TableStatsTest {
 	}
 
 	@AfterClass
-	public static void stopAccumulo() throws Exception {
+	public static void stopAccumulo()
+			throws Exception {
 		accumulo.stop();
 	}
 
-	public static Connector getInstance() throws IOException,
-			InterruptedException, AccumuloException, AccumuloSecurityException {
+	public static Connector getInstance()
+			throws IOException,
+			InterruptedException,
+			AccumuloException,
+			AccumuloSecurityException {
 
 		File tempDirectory = Files.createTempDir();
 
 		MiniAccumuloConfigImpl miniAccumuloConfig = new MiniAccumuloConfigImpl(
-				tempDirectory, pass).setNumTservers(2)
-				.setInstanceName(instanceName).setZooKeeperPort(2181);
+				tempDirectory,
+				pass).setNumTservers(
+				2).setInstanceName(
+				instanceName).setZooKeeperPort(
+				2181);
 
-		accumulo = new MiniAccumuloClusterImpl(miniAccumuloConfig);
+		accumulo = new MiniAccumuloClusterImpl(
+				miniAccumuloConfig);
 
 		accumulo.start();
 
-		Instance instance = new ZooKeeperInstance(accumulo.getInstanceName(),
+		Instance instance = new ZooKeeperInstance(
+				accumulo.getInstanceName(),
 				accumulo.getZooKeepers());
-		Connector conn = instance.getConnector(user, new PasswordToken(pass));
+		Connector conn = instance.getConnector(
+				user,
+				new PasswordToken(
+						pass));
 		return conn;
 	}
 
