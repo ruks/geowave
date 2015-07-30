@@ -46,88 +46,77 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
-public class GeospatialExtent
-{
+public class GeospatialExtent {
 
-	private static final Logger logger = LogManager.getLogger(GeospatialExtent.class);
-	private final static String instanceName = "geowave";
-	private final static String zooServers = "127.0.0.1";
-	private final static String password = "password";
-	private final static String user = "root";
-	private final static String namespace = "ruks";
+	private static final Logger logger = LogManager
+			.getLogger(GeospatialExtent.class);
+	private String instanceName = "geowave";
+	private String zooServers = "127.0.0.1";
+	private String password = "password";
+	private String user = "root";
+	private String namespace = "ruks";
+	Connector connector;
 
-	private final static String table = "ruks_SPATIAL_VECTOR_IDX";
-
-	public static void main(
-			String[] args )
-			throws Exception {
-
-		GeospatialExtent ex = new GeospatialExtent();
-		ex.getTabletPolygon(table);
+	public GeospatialExtent(String instanceName, String zooServers,
+			String password, String user, String namespace) {
+		super();
+		this.instanceName = instanceName;
+		this.zooServers = zooServers;
+		this.password = password;
+		this.user = user;
+		this.namespace = namespace;
 	}
 
-	public void getTabletPolygon(
-			String table ) {
+	// private final static String table = "ruks_SPATIAL_VECTOR_IDX";
 
-		Instance accInstance = new ZooKeeperInstance(
-				instanceName,
-				zooServers);
-		AuthenticationToken authToken = new PasswordToken(
-				password);
-		Connector connector;
-		try {
-			connector = accInstance.getConnector(
-					user,
-					authToken);
-		}
-		catch (AccumuloException | AccumuloSecurityException e) {
-			// TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
-			return;
-		}
+	public static void main(String[] args) throws Exception {
 
-		List<Range> splits = getSplits(
-				connector,
-				accInstance);
-		System.out.println("splits " + splits.size());
+		GeospatialExtent ex = new GeospatialExtent("geowave", "127.0.0.1",
+				"password", "root", "test4");
+		String table = "test4_SPATIAL_VECTOR_IDX";
+		List<Range> splits = ex.getTabletPolygon(table);
+		System.out.println("splits "+splits.size());
 		for (Range range : splits) {
-			this.extent(
-					table,
-					range,
-					connector);
+			Coordinate[] points = ex.extent(table, range, ex.connector);
+			Geometry g = ex.getConvexHull(points);
+			System.out.println(g);
 		}
 	}
 
-	private List<Range> getSplits(
-			Connector connector,
-			Instance accInstance ) {
+	public List<Range> getTabletPolygon(String table) {
+
+		Instance accInstance = new ZooKeeperInstance(instanceName, zooServers);
+		AuthenticationToken authToken = new PasswordToken(password);
+
+		try {
+			connector = accInstance.getConnector(user, authToken);
+		} catch (AccumuloException | AccumuloSecurityException e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getMessage(), e);
+			return null;
+		}
+
+		return getSplits(connector, accInstance, table);
+
+	}
+
+	private List<Range> getSplits(Connector connector, Instance accInstance,
+			String table) {
 		TableOperations op = connector.tableOperations();
 		System.out.println(op.tableIdMap());
 
-		String tableid = op.tableIdMap().get(
-				table);
+		String tableid = op.tableIdMap().get(table);
 		ArrayList<Range> ranges = new ArrayList<Range>();
 
 		try {
-			List<Text> list = new ArrayList<Text>(
-					op.listSplits(table));
+			List<Text> list = new ArrayList<Text>(op.listSplits(table));
 			System.out.println(list.size());
 
 			ClientConfiguration clientConf = ClientConfiguration.loadDefault();
 
-			ClientContext ctx = new ClientContext(
-					accInstance,
-					new Credentials(
-							user,
-							new PasswordToken(
-									password)),
-					clientConf);
-			TabletLocator tl = TabletLocator.getLocator(
-					ctx,
-					new Text(
-							tableid));
+			ClientContext ctx = new ClientContext(accInstance, new Credentials(
+					user, new PasswordToken(password)), clientConf);
+			TabletLocator tl = TabletLocator.getLocator(ctx, new Text(tableid));
 
 			TabletLocation tt;
 			// String loc;
@@ -137,11 +126,7 @@ public class GeospatialExtent
 			KeyExtent ke;
 
 			for (int i = 0; i < list.size(); i++) {
-				tt = tl.locateTablet(
-						ctx,
-						list.get(i),
-						false,
-						false);
+				tt = tl.locateTablet(ctx, list.get(i), false, false);
 				System.out.println(tt.tablet_location);
 				ke = tt.tablet_extent;
 				// loc = tl.locateTablet(ctx, ke.getEndRow(), false,
@@ -155,62 +140,39 @@ public class GeospatialExtent
 			}
 
 			Text first, last;
-			Key[] kk = this.read(
-					list.get(list.size() - 1),
-					table,
-					connector);
+			Key[] kk = this.read(list.get(list.size() - 1), table, connector);
 			first = kk[0].getRow();
 			last = kk[1].getRow();
 
-			tt = tl.locateTablet(
-					ctx,
-					first,
-					false,
-					false);
+			tt = tl.locateTablet(ctx, first, false, false);
 			System.out.println(tt.tablet_location);
 			ke = tt.tablet_extent;
 			// loc = tl.locateTablet(ctx, last, false, false).tablet_location;
-			r = new Range(
-					first,
-					last);
+			r = new Range(first, last);
 			ranges.add(r);
 			System.out.println(ke.getUUID());
 
-		}
-		catch (AccumuloException | TableNotFoundException e1) {
+		} catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
-			logger.error(
-					e1.getMessage(),
-					e1);
+			logger.error(e1.getMessage(), e1);
 			e1.printStackTrace();
-		}
-		catch (AccumuloSecurityException e) {
+		} catch (AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
+			logger.error(e.getMessage(), e);
 			e.printStackTrace();
 		}
 
 		return ranges;
 	}
 
-	private Key[] read(
-			Text end,
-			String table,
-			Connector connector ) {
+	private Key[] read(Text end, String table, Connector connector) {
 
 		try {
 
 			Authorizations auths = new Authorizations();
-			Scanner scan = connector.createScanner(
-					table,
-					auths);
-			scan.setRange(new Range(
-					end,
-					null));
-			IteratorSetting itSettings = new IteratorSetting(
-					1,
+			Scanner scan = connector.createScanner(table, auths);
+			scan.setRange(new Range(end, null));
+			IteratorSetting itSettings = new IteratorSetting(1,
 					WholeRowIterator.class);
 			scan.addScanIterator(itSettings);
 
@@ -224,61 +186,42 @@ public class GeospatialExtent
 				}
 			}
 			last = k;
-			return new Key[] {
-				first,
-				last
-			};
+			return new Key[] { first, last };
 
-		}
-		catch (TableNotFoundException e) {
+		} catch (TableNotFoundException e) {
 			e.printStackTrace();
-			logger.error(
-					e.getMessage(),
-					e);
+			logger.error(e.getMessage(), e);
 			e.printStackTrace();
 			return null;
 		}
 
 	}
 
-	private void extent(
-			String table,
-			Range range,
-			Connector connector ) {
+	public Coordinate[] extent(String table, Range range, Connector connector) {
 
 		Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 
 		try {
 
 			Authorizations auths = new Authorizations();
-			Scanner scan = connector.createScanner(
-					table,
-					auths);
+			Scanner scan = connector.createScanner(table, auths);
 			scan.setRange(range);
-			IteratorSetting itSettings = new IteratorSetting(
-					1,
+			IteratorSetting itSettings = new IteratorSetting(1,
 					WholeRowIterator.class);
 			scan.addScanIterator(itSettings);
 
 			ArrayList<SimpleFeatureImpl> list = new ArrayList<SimpleFeatureImpl>();
 			for (Entry<Key, Value> entry : scan) {
-				AccumuloRowId id = new AccumuloRowId(
-						entry.getKey());
-				ByteArrayId bid = new ByteArrayId(
-						id.getAdapterId());
+				AccumuloRowId id = new AccumuloRowId(entry.getKey());
+				ByteArrayId bid = new ByteArrayId(id.getAdapterId());
 
-				AccumuloOperations ao = new BasicAccumuloOperations(
-						connector,
+				AccumuloOperations ao = new BasicAccumuloOperations(connector,
 						namespace);
-				AccumuloAdapterStore a = new AccumuloAdapterStore(
-						ao);
+				AccumuloAdapterStore a = new AccumuloAdapterStore(ao);
 				DataAdapter<?> adapter = a.getAdapter(bid);
 
-				Object o = AccumuloUtils.decodeRow(
-						entry.getKey(),
-						entry.getValue(),
-						adapter,
-						index);
+				Object o = AccumuloUtils.decodeRow(entry.getKey(),
+						entry.getValue(), adapter, index);
 
 				SimpleFeatureImpl pa = (SimpleFeatureImpl) o;
 				list.add(pa);
@@ -292,26 +235,26 @@ public class GeospatialExtent
 				SimpleFeatureImpl si = list.get(i);
 				double x = (double) si.getAttribute("Latitude");
 				double y = (double) si.getAttribute("Longitude");
-				points[i] = new Coordinate(
-						x,
-						y);
+				points[i] = new Coordinate(x, y);
+				System.out.println(points[i]);
 			}
 
-			ConvexHull c = new ConvexHull(
-					points,
-					new GeometryFactory());
-			Geometry geometry = c.getConvexHull();
-			System.out.println(geometry.getNumPoints());
-			System.out.println(geometry);
+			return points;
 
-		}
-		catch (TableNotFoundException e) { // TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
+		} catch (TableNotFoundException e) { // TODO Auto-generated catch block
+			logger.error(e.getMessage(), e);
 			e.printStackTrace();
+			return null;
 		}
 
+	}
+
+	public Geometry getConvexHull(Coordinate[] points) {
+		ConvexHull c = new ConvexHull(points, new GeometryFactory());
+		Geometry geometry = c.getConvexHull();
+		System.out.println(geometry.getNumPoints());
+		System.out.println(geometry);
+		return geometry;
 	}
 
 }
