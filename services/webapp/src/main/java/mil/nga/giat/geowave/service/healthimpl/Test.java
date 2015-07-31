@@ -1,34 +1,26 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
-import java.io.File;
-import java.util.List;
-
-import mil.nga.giat.geowave.service.jaxbbean.TableBean;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.client.impl.MasterClient;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.accumulo.core.master.thrift.MasterClientService;
-import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
-import org.apache.accumulo.core.trace.Tracer;
-import org.apache.accumulo.minicluster.MiniAccumuloCluster;
-import org.apache.accumulo.minicluster.impl.MiniAccumuloClusterImpl;
-import org.apache.accumulo.minicluster.impl.MiniAccumuloConfigImpl;
-import org.apache.accumulo.server.AccumuloServerContext;
-import org.apache.accumulo.server.conf.ServerConfigurationFactory;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.WholeRowIterator;
+import org.apache.accumulo.core.security.Authorizations;
+import org.apache.hadoop.io.Text;
 
-import com.google.common.io.Files;
+public class Test {
 
-public class Test
-{
-
-	public static void main(
-			String[] args )
-			throws Exception {
+	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 
 		String instanceName = "geowave";
@@ -36,44 +28,37 @@ public class Test
 		String user = "root";
 		String pass = "password";
 
-		File tempDirectory = Files.createTempDir();
-		MiniAccumuloConfigImpl miniAccumuloConfig = new MiniAccumuloConfigImpl(
-				tempDirectory,
-				pass).setNumTservers(
-				2).setInstanceName(
-				instanceName).setZooKeeperPort(
-				2181);
+		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
+		AuthenticationToken authToken = new PasswordToken(pass);
+		Connector conn = inst.getConnector(user, authToken);
+		TableOperations t = conn.tableOperations();
 
-		MiniAccumuloClusterImpl accumulo = new MiniAccumuloClusterImpl(
-				miniAccumuloConfig);
-		accumulo.start();
+		Authorizations auths = new Authorizations();
 
-		Instance inst = new ZooKeeperInstance(
-				instanceName,
-				zooServers);
+		Scanner scan = conn.createScanner(IngestData.ns+"_SPATIAL_VECTOR_IDX", auths);
 
-		MasterMonitorInfo masterMonitorInfo = null;
+		// scan.setRange(new Range("harry", "john"));
+		// scan.fetchColumnFamily(new Text("attributes"));
+		IteratorSetting it = new IteratorSetting(1, org.apache.accumulo.core.iterators.user.WholeRowIterator.class);
+		scan.addScanIterator(it);
 
-		MasterClientService.Iface client = null;
-		try {
-			AccumuloServerContext context = new AccumuloServerContext(
-					new ServerConfigurationFactory(
-							inst));
-			client = MasterClient.getConnectionWithRetry(context);
-			masterMonitorInfo = client.getMasterStats(
-					Tracer.traceInfo(),
-					context.rpcCreds());
+		int i=0;
+		SortedSet<Text> keys = new TreeSet<Text>(); 
+		for (Entry<Key, Value> entry : scan) {
+			Text row = entry.getKey().getRow();
+			System.out.println(row);
+			i++;
+			if(i==3){
+				keys.add(row);
+			}
 		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-			return;
-		}
-		finally {
-
-			if (client != null) MasterClient.close(client);
-		}
-
-		System.out.println(masterMonitorInfo.tableMap);
+		System.out.println(i);
+		
+				
+		t.addSplits(IngestData.ns+"_SPATIAL_VECTOR_IDX", keys);
+		
+//		GeospatialExtent ex = new GeospatialExtent("geowave", "127.0.0.1",
+//				"password", "root", SimpleIngest.ns);
+//		ex.getTabletPolygon(SimpleIngest.ns+"_SPATIAL_VECTOR_IDX");
 	}
-
 }
