@@ -27,53 +27,73 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
-public class IngestData {
+public class IngestData
+{
 
 	static Logger log = Logger.getLogger(IngestData.class);
 	public static final String FEATURE_NAME = "GridPoint";
 	public static final String ns = "test4";
 
-	public static void main(final String[] args) {
+	public static void main(
+			final String[] args ) {
 
 	}
 
-	public void ingestData(String zooServers, String instanceName, String user,
-			String pass, String ns) {
+	public void ingestData(
+			String zooServers,
+			String instanceName,
+			String user,
+			String pass,
+			String ns ) {
 		final IngestData si = new IngestData();
 
 		try {
-			final BasicAccumuloOperations bao = si
-					.getAccumuloOperationsInstance(zooServers, instanceName,
-							user, pass, ns);
+			final BasicAccumuloOperations bao = si.getAccumuloOperationsInstance(
+					zooServers,
+					instanceName,
+					user,
+					pass,
+					ns);
 
 			final DataStore geowaveDataStore = si.getGeowaveDataStore(bao);
 			si.generateGrid(geowaveDataStore);
-		} catch (final Exception e) {
-			log.error("Error creating BasicAccumuloOperations", e);
-			System.exit(1);
+		}
+		catch (final Exception e) {
+			log.error(
+					"Error creating BasicAccumuloOperations",
+					e);
+			return;
 		}
 
-		System.out.println("Finished ingesting data to namespace: " + ns
-				+ " at accumulo instance: " + instanceName);
+		System.out.println("Finished ingesting data to namespace: " + ns + " at accumulo instance: " + instanceName);
 	}
 
 	public static List<SimpleFeature> getGriddedFeatures(
-			SimpleFeatureBuilder pointBuilder, int firstFeatureId) {
+			SimpleFeatureBuilder pointBuilder,
+			int firstFeatureId ) {
 
 		int featureId = firstFeatureId;
 		List<SimpleFeature> feats = new ArrayList<>();
 		for (int longitude = -180; longitude < -90; longitude += 30) {
 			for (int latitude = -180; latitude < -90; latitude += 45) {
-				pointBuilder.set("geometry", GeometryUtils.GEOMETRY_FACTORY
-						.createPoint(new Coordinate(longitude, latitude)));
-				pointBuilder.set("TimeStamp", new Date());
-				pointBuilder.set("Latitude", latitude);
-				pointBuilder.set("Longitude", longitude);
+				pointBuilder.set(
+						"geometry",
+						GeometryUtils.GEOMETRY_FACTORY.createPoint(new Coordinate(
+								longitude,
+								latitude)));
+				pointBuilder.set(
+						"TimeStamp",
+						new Date());
+				pointBuilder.set(
+						"Latitude",
+						latitude);
+				pointBuilder.set(
+						"Longitude",
+						longitude);
 				// Note since trajectoryID and comment are marked as nillable we
 				// don't need to set them (they default ot null).
 
-				final SimpleFeature sft = pointBuilder.buildFeature(String
-						.valueOf(featureId));
+				final SimpleFeature sft = pointBuilder.buildFeature(String.valueOf(featureId));
 				feats.add(sft);
 				featureId++;
 			}
@@ -81,7 +101,8 @@ public class IngestData {
 		return feats;
 	}
 
-	protected void generateGrid(final DataStore geowaveDataStore) {
+	protected void generateGrid(
+			final DataStore geowaveDataStore ) {
 
 		// In order to store data we need to determine the type of data store
 		final SimpleFeatureType point = createPointFeatureType();
@@ -117,8 +138,13 @@ public class IngestData {
 		// Note that the ingest method can take a feature, or an
 		// interator on a collection of SimpleFeatures. The latter
 		// is the preferred mechanism for non-trivial data sets.
-		for (SimpleFeature sft : getGriddedFeatures(pointBuilder, 0)) {
-			geowaveDataStore.ingest(adapter, index, sft);
+		for (SimpleFeature sft : getGriddedFeatures(
+				pointBuilder,
+				0)) {
+			geowaveDataStore.ingest(
+					adapter,
+					index,
+					sft);
 		}
 	}
 
@@ -132,15 +158,20 @@ public class IngestData {
 	 * @return DataStore object for the particular accumulo instance
 	 */
 	protected DataStore getGeowaveDataStore(
-			final BasicAccumuloOperations instance) {
+			final BasicAccumuloOperations instance ) {
 
 		// GeoWave persists both the index and data adapter to the same accumulo
 		// namespace as the data. The intent here
 		// is that all data is discoverable without configuration/classes stored
 		// outside of the accumulo instance.
-		return new AccumuloDataStore(new AccumuloIndexStore(instance),
-				new AccumuloAdapterStore(instance),
-				new AccumuloDataStatisticsStore(instance), instance);
+		return new AccumuloDataStore(
+				new AccumuloIndexStore(
+						instance),
+				new AccumuloAdapterStore(
+						instance),
+				new AccumuloDataStatisticsStore(
+						instance),
+				instance);
 	}
 
 	/***
@@ -165,12 +196,19 @@ public class IngestData {
 	 * @throws AccumuloSecurityException
 	 */
 	protected BasicAccumuloOperations getAccumuloOperationsInstance(
-			final String zookeepers, final String accumuloInstance,
-			final String accumuloUser, final String accumuloPass,
-			final String geowaveNamespace) throws AccumuloException,
+			final String zookeepers,
+			final String accumuloInstance,
+			final String accumuloUser,
+			final String accumuloPass,
+			final String geowaveNamespace )
+			throws AccumuloException,
 			AccumuloSecurityException {
-		return new BasicAccumuloOperations(zookeepers, accumuloInstance,
-				accumuloUser, accumuloPass, geowaveNamespace);
+		return new BasicAccumuloOperations(
+				zookeepers,
+				accumuloInstance,
+				accumuloUser,
+				accumuloPass,
+				geowaveNamespace);
 	}
 
 	/***
@@ -184,8 +222,9 @@ public class IngestData {
 	 *         type
 	 */
 	public static FeatureDataAdapter createDataAdapter(
-			final SimpleFeatureType sft) {
-		return new FeatureDataAdapter(sft);
+			final SimpleFeatureType sft ) {
+		return new FeatureDataAdapter(
+				sft);
 	}
 
 	/***
@@ -237,18 +276,30 @@ public class IngestData {
 		// as the geometry contains that information. But it's
 		// convienent in many use cases to get a text representation without
 		// having to handle geometries.
-		builder.add(ab.binding(Geometry.class).nillable(false)
-				.buildDescriptor("geometry"));
-		builder.add(ab.binding(Date.class).nillable(true)
-				.buildDescriptor("TimeStamp"));
-		builder.add(ab.binding(Double.class).nillable(false)
-				.buildDescriptor("Latitude"));
-		builder.add(ab.binding(Double.class).nillable(false)
-				.buildDescriptor("Longitude"));
-		builder.add(ab.binding(String.class).nillable(true)
-				.buildDescriptor("TrajectoryID"));
-		builder.add(ab.binding(String.class).nillable(true)
-				.buildDescriptor("Comment"));
+		builder.add(ab.binding(
+				Geometry.class).nillable(
+				false).buildDescriptor(
+				"geometry"));
+		builder.add(ab.binding(
+				Date.class).nillable(
+				true).buildDescriptor(
+				"TimeStamp"));
+		builder.add(ab.binding(
+				Double.class).nillable(
+				false).buildDescriptor(
+				"Latitude"));
+		builder.add(ab.binding(
+				Double.class).nillable(
+				false).buildDescriptor(
+				"Longitude"));
+		builder.add(ab.binding(
+				String.class).nillable(
+				true).buildDescriptor(
+				"TrajectoryID"));
+		builder.add(ab.binding(
+				String.class).nillable(
+				true).buildDescriptor(
+				"Comment"));
 
 		return builder.buildFeatureType();
 	}

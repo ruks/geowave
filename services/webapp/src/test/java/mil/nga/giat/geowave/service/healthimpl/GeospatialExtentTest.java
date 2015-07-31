@@ -34,7 +34,8 @@ import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
-public class GeospatialExtentTest {
+public class GeospatialExtentTest
+{
 	static String testTnameSuffix = "_SPATIAL_VECTOR_IDX";
 	static TableOperations operation;
 	static Connector conn;
@@ -50,35 +51,50 @@ public class GeospatialExtentTest {
 	public static void ingest() {
 		try {
 			startAccumulo();
-		} catch (IOException | InterruptedException | AccumuloException
-				| AccumuloSecurityException e) {
+		}
+		catch (IOException | InterruptedException | AccumuloException | AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		IngestData ingest = new IngestData();
-		ingest.ingestData(zooServers, instanceName, user, pass, ns);
+		ingest.ingestData(
+				zooServers,
+				instanceName,
+				user,
+				pass,
+				ns);
 		try {
 			addSpits();
-		} catch (AccumuloException | AccumuloSecurityException
-				| TableNotFoundException e) {
+		}
+		catch (AccumuloException | AccumuloSecurityException | TableNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	static void addSpits() throws AccumuloException, AccumuloSecurityException,
+	static void addSpits()
+			throws AccumuloException,
+			AccumuloSecurityException,
 			TableNotFoundException {
-		Instance inst = new ZooKeeperInstance(instanceName, zooServers);
-		AuthenticationToken authToken = new PasswordToken(pass);
-		Connector conn = inst.getConnector(user, authToken);
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
+		AuthenticationToken authToken = new PasswordToken(
+				pass);
+		Connector conn = inst.getConnector(
+				user,
+				authToken);
 		TableOperations t = conn.tableOperations();
 
 		Authorizations auths = new Authorizations();
 
 		String table = ns + testTnameSuffix;
-		Scanner scan = conn.createScanner(table, auths);
+		Scanner scan = conn.createScanner(
+				table,
+				auths);
 
-		IteratorSetting it = new IteratorSetting(1,
+		IteratorSetting it = new IteratorSetting(
+				1,
 				org.apache.accumulo.core.iterators.user.WholeRowIterator.class);
 		scan.addScanIterator(it);
 
@@ -92,30 +108,49 @@ public class GeospatialExtentTest {
 			}
 		}
 
-		t.addSplits(table, keys);
+		t.addSplits(
+				table,
+				keys);
 	}
 
 	@AfterClass
-	public static void stopAccumulo() throws Exception {
+	public static void stopAccumulo()
+			throws Exception {
 		accumulo.stop();
 	}
 
 	@Test
 	public void getTabletPolygonTest() {
-		GeospatialExtent ex = new GeospatialExtent(instanceName,
-				"127.0.0.1:2181", pass, user, ns);
+		GeospatialExtent ex = new GeospatialExtent(
+				instanceName,
+				"127.0.0.1:2181",
+				pass,
+				user,
+				ns);
 		String testTname = ns + testTnameSuffix;
 		List<Range> splits = ex.getSplits(testTname);
 
 		for (Range range : splits) {
-			Coordinate[] points = ex.extent(testTname, range);
-			Assert.assertEquals(3, points.length);
+			Coordinate[] points = ex.extent(
+					testTname,
+					range);
+			Assert.assertEquals(
+					3,
+					points.length);
 			Geometry g = ex.getConvexHull(points);
-			Assert.assertEquals(4, g.getNumPoints());
+			Assert.assertEquals(
+					4,
+					g.getNumPoints());
 
 			Coordinate[] cos = g.getCoordinates();
-			Assert.assertEquals(cos[0].x, cos[3].x, 0);
-			Assert.assertEquals(cos[0].y, cos[3].y, 0);
+			Assert.assertEquals(
+					cos[0].x,
+					cos[3].x,
+					0);
+			Assert.assertEquals(
+					cos[0].y,
+					cos[3].y,
+					0);
 
 			boolean exist;
 			for (Coordinate poi1 : points) {
@@ -132,20 +167,29 @@ public class GeospatialExtentTest {
 
 	}
 
-	public void getPointsTabletTest(Coordinate[] cos, List<Range> splits) {
+	public void getPointsTabletTest(
+			Coordinate[] cos,
+			List<Range> splits ) {
 
 	}
 
-	public static void startAccumulo() throws IOException,
-			InterruptedException, AccumuloException, AccumuloSecurityException {
+	public static void startAccumulo()
+			throws IOException,
+			InterruptedException,
+			AccumuloException,
+			AccumuloSecurityException {
 
 		File tempDirectory = Files.createTempDir();
 
 		MiniAccumuloConfigImpl miniAccumuloConfig = new MiniAccumuloConfigImpl(
-				tempDirectory, pass).setNumTservers(2)
-				.setInstanceName(instanceName).setZooKeeperPort(2181);
+				tempDirectory,
+				pass).setNumTservers(
+				2).setInstanceName(
+				instanceName).setZooKeeperPort(
+				2181);
 
-		accumulo = new MiniAccumuloClusterImpl(miniAccumuloConfig);
+		accumulo = new MiniAccumuloClusterImpl(
+				miniAccumuloConfig);
 
 		accumulo.start();
 
