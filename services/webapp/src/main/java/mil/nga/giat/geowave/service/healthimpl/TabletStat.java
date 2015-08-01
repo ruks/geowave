@@ -4,15 +4,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
 import mil.nga.giat.geowave.service.jaxbbean.TabletServerBean;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.ClientConfiguration;
+import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.client.impl.ClientContext;
 import org.apache.accumulo.core.client.impl.Credentials;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.impl.KeyExtent;
 import org.apache.accumulo.core.rpc.ThriftUtil;
@@ -38,6 +45,7 @@ public class TabletStat
 	String zooServers;
 	String user;
 	String pass;
+	TableOperations ops;
 
 	public TabletStat(
 			String instanceName,
@@ -54,6 +62,23 @@ public class TabletStat
 				instanceName,
 				zooServers);
 		Instance accInstance = inst;
+
+		AuthenticationToken authToken = new PasswordToken(
+				pass);
+
+		Connector connector;
+		try {
+			connector = accInstance.getConnector(
+					user,
+					authToken);
+			ops = connector.tableOperations();
+		}
+		catch (AccumuloException | AccumuloSecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			// return;
+		}
+
 		ClientConfiguration clientConf = ClientConfiguration.loadDefault();
 		ctx = new ClientContext(
 				accInstance,
@@ -84,9 +109,9 @@ public class TabletStat
 	}
 
 	public List<TabletBean> getTabletStats(
-			String tid ) {
+			String tableName ) {
 
-		String table;
+		String table = "";
 		String tablet;
 		long entries;
 		double ingest;
@@ -99,6 +124,8 @@ public class TabletStat
 		double maAvges = 0;
 
 		List<TabletBean> stat = new ArrayList<TabletBean>();
+		String tid = ops.tableIdMap().get(
+				tableName);
 
 		try {
 
@@ -137,6 +164,15 @@ public class TabletStat
 				tsStats.addAll(tss);
 			}
 
+			Map<String, String> tcon = ops.tableIdMap();
+			for (Entry<String, String> entry : tcon.entrySet()) {
+				String row = entry.getValue();
+				if (tid.equals(row)) {
+					table = entry.getKey();
+					break;
+				}
+			}
+
 			for (TabletStats info : tsStats) {
 
 				if (info.extent == null) {
@@ -145,7 +181,7 @@ public class TabletStat
 
 				KeyExtent extent = new KeyExtent(
 						info.extent);
-				String tableId = extent.getTableId().toString();
+				// String tableId = extent.getTableId().toString();
 
 				MessageDigest digester = MessageDigest.getInstance("MD5");
 				if (extent.getEndRow() != null && extent.getEndRow().getLength() > 0) {
@@ -156,7 +192,7 @@ public class TabletStat
 				}
 				String obscuredExtent = Base64.encodeBase64String(digester.digest());
 
-				table = tableId;
+				table = tableName;
 				tablet = obscuredExtent;
 
 				entries = info.numEntries;
@@ -211,6 +247,7 @@ public class TabletStat
 				user,
 				pass);
 		System.out.println(t.getTabletStats(
-				"!0").size());
+				"!0").get(
+				0).getTable());
 	}
 }

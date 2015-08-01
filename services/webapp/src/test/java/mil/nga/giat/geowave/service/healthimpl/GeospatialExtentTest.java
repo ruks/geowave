@@ -7,6 +7,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
+import mil.nga.giat.geowave.service.jaxbbean.RangeBean;
+
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
@@ -128,12 +130,12 @@ public class GeospatialExtentTest
 				user,
 				ns);
 		String testTname = ns + testTnameSuffix;
-		List<Range> splits = ex.getSplits(testTname);
+		List<RangeBean> splits = ex.getSplits(testTname);
 
-		for (Range range : splits) {
+		for (RangeBean bean : splits) {
 			Coordinate[] points = ex.extent(
 					testTname,
-					range);
+					bean.getRange());
 			Assert.assertEquals(
 					3,
 					points.length);

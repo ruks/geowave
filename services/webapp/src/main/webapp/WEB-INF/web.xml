@@ -21,7 +21,7 @@
 			<param-name>config.properties</param-name>
 			<param-value>/WEB-INF/config.properties</param-value>
 		</init-param>
-		
+
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
@@ -29,4 +29,9 @@
 		<servlet-name>jersey-geowave-servlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+
+	<listener>
+		<listener-class>mil.nga.giat.geowave.service.healthimpl.BackgroundWorker</listener-class>
+	</listener>
+
 </web-app>

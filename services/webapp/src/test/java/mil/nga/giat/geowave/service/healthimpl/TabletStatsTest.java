@@ -155,8 +155,6 @@ public class TabletStatsTest
 				zooServers,
 				user,
 				pass);
-		String tid = operation.tableIdMap().get(
-				testTname);
 
 		SortedSet<Text> splitkeys = new TreeSet<Text>();
 		splitkeys.add(new Text(
@@ -169,15 +167,15 @@ public class TabletStatsTest
 				splitkeys);
 
 		int tabs = 0;
-		for (TabletBean tablet : stats.getTabletStats(tid)) {
+		for (TabletBean tablet : stats.getTabletStats(testTname)) {
 			if (tablet.getTable().equals(
-					tid)) {
+					testTname)) {
 				tabs++;
 			}
 		}
 		Assert.assertEquals(
-				tabs,
-				3);
+				3,
+				tabs);
 
 	}
 

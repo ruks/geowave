@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -13,6 +15,7 @@ import mil.nga.giat.geowave.datastore.accumulo.AccumuloRowId;
 import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
+import mil.nga.giat.geowave.service.jaxbbean.RangeBean;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -36,6 +39,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.data.impl.KeyExtent;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.accumulo.core.util.Base64;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -101,26 +105,26 @@ public class GeospatialExtent
 				"127.0.0.1",
 				"password",
 				"root",
-				"test4");
-		String table = "test4_SPATIAL_VECTOR_IDX";
-		List<Range> splits = ex.getSplits(table);
+				"ruks");
+		String table = "ruks_SPATIAL_VECTOR_IDX";
+		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
-		for (Range range : splits) {
+		for (RangeBean bean : splits) {
 			Coordinate[] points = ex.extent(
 					table,
-					range);
+					bean.getRange());
 			Geometry g = ex.getConvexHull(points);
 			System.out.println(g);
 		}
 	}
 
-	public List<Range> getSplits(
+	public List<RangeBean> getSplits(
 			String table ) {
 		TableOperations op = this.connector.tableOperations();
 
 		String tableid = op.tableIdMap().get(
 				table);
-		ArrayList<Range> ranges = new ArrayList<Range>();
+		ArrayList<RangeBean> ranges = new ArrayList<RangeBean>();
 
 		try {
 			List<Text> list = new ArrayList<Text>(
@@ -142,9 +146,18 @@ public class GeospatialExtent
 
 			TabletLocation tt;
 
-			Range r;
-			// String uuid;
+			RangeBean bean;
+			String obscuredExtent;
 			KeyExtent ke;
+			MessageDigest digester;
+			try {
+				digester = MessageDigest.getInstance("MD5");
+			}
+			catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
 
 			for (int i = 0; i < list.size(); i++) {
 				tt = tl.locateTablet(
@@ -153,14 +166,37 @@ public class GeospatialExtent
 						false,
 						false);
 				ke = tt.tablet_extent;
-				ranges.add(ke.toDataRange());
+
+				if (ke.getEndRow() != null && ke.getEndRow().getLength() > 0) {
+					digester.update(
+							ke.getEndRow().getBytes(),
+							0,
+							ke.getEndRow().getLength());
+				}
+				obscuredExtent = Base64.encodeBase64String(digester.digest());
+
+				bean = new RangeBean(
+						ke.toDataRange(),
+						obscuredExtent);
+				ranges.add(bean);
 				// uuid = ke.getUUID().toString();
 			}
 
 			Text first, last;
-			Key[] kk = this.read(
-					list.get(list.size() - 1),
-					table);
+
+			Key[] kk;
+			if (list.isEmpty()) {
+				kk = this.read(
+						null,
+						null,
+						table);
+			}
+			else {
+				kk = this.read(
+						list.get(list.size() - 1),
+						null,
+						table);
+			}
 			first = kk[0].getRow();
 			last = kk[1].getRow();
 
@@ -170,10 +206,16 @@ public class GeospatialExtent
 					false,
 					false);
 			ke = tt.tablet_extent;
-			r = new Range(
+			Range r = new Range(
 					first,
 					last);
-			ranges.add(r);
+
+			obscuredExtent = Base64.encodeBase64String(digester.digest());
+
+			bean = new RangeBean(
+					r,
+					obscuredExtent);
+			ranges.add(bean);
 
 		}
 		catch (AccumuloException | TableNotFoundException e1) {
@@ -195,6 +237,7 @@ public class GeospatialExtent
 	}
 
 	private Key[] read(
+			Text start,
 			Text end,
 			String table ) {
 
@@ -205,8 +248,8 @@ public class GeospatialExtent
 					table,
 					auths);
 			scan.setRange(new Range(
-					end,
-					null));
+					start,
+					end));
 			IteratorSetting itSettings = new IteratorSetting(
 					1,
 					WholeRowIterator.class);

@@ -4,12 +4,15 @@ import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import mil.nga.giat.geowave.service.healthimpl.BackgroundWorker;
 import mil.nga.giat.geowave.service.healthimpl.TableStats;
 import mil.nga.giat.geowave.service.healthimpl.TabletStat;
+import mil.nga.giat.geowave.service.jaxbbean.GeoJson;
 import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
 
@@ -23,6 +26,23 @@ public class AccumuloStatistic
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
 		return "Got it!";
+	}
+
+	@GET
+	@Path("/geo")
+	@Produces("application/json")
+	public Response geojson() {
+
+		BackgroundWorker thread = BackgroundWorker.getInstance();
+		List<GeoJson> nodes = thread.getNodes();
+
+		return Response.ok().entity(
+				nodes).header(
+				"Access-Contrl-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
 	}
 
 	@GET
@@ -60,9 +80,11 @@ public class AccumuloStatistic
 	}
 
 	@GET
-	@Path("/tablet")
+	@Path("/tablet/{table}")
 	@Produces("application/json")
-	public Response tablets() {
+	public Response tablets(
+			@PathParam("table")
+			String table ) {
 
 		TabletStat stat;
 		try {
@@ -81,7 +103,7 @@ public class AccumuloStatistic
 			e.printStackTrace();
 			return null;
 		}
-		List<TabletBean> list = stat.getTabletStats("2");
+		List<TabletBean> list = stat.getTabletStats(table);
 
 		return Response.ok().entity(
 				list).header(
@@ -91,4 +113,48 @@ public class AccumuloStatistic
 				"GET, POST, DELETE, PUT").allow(
 				"OPTIONS").build();
 	}
+
+	@GET
+	@Path("/tablet/{table}/{tabletId}")
+	@Produces("application/json")
+	public Response tablet(
+			@PathParam("table")
+			String table,
+			@PathParam("tabletId")
+			String tabletId ) {
+
+		TabletStat stat;
+		try {
+			String instanceName = "geowave";
+			String zooServers = "127.0.0.1";
+			String user = "root";
+			String pass = "password";
+			stat = new TabletStat(
+					instanceName,
+					zooServers,
+					user,
+					pass);
+		}
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		List<TabletBean> list = stat.getTabletStats(table);
+		TabletBean result = null;
+		for (TabletBean bean : list) {
+			if (bean.getTablet().equals(
+					tabletId)) {
+				result = bean;
+			}
+		}
+		return Response.ok().entity(
+				result).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
+	}
+
 }
