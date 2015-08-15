@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Accumulo Health Monitor</title>
+
+<style>
+
+.land {
+  fill: #ccc;
+}
+
+.country-border {
+  fill: none;
+  stroke: #fff;
+}
+
+.counties {
+  fill: none;
+}
+
+.states {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+.q0-9 { fill:rgb(247,251,255); }
+.q1-9 { fill:rgb(222,235,247); }
+.q2-9 { fill:rgb(198,219,239); }
+.q3-9 { fill:rgb(158,202,225); }
+.q4-9 { fill:rgb(107,174,214); }
+.q5-9 { fill:rgb(66,146,198); }
+.q6-9 { fill:rgb(33,113,181); }
+.q7-9 { fill:rgb(8,81,156); }
+.q8-9 { fill:rgb(8,48,107); }
+
+.c0 { fill:#FFB2B2; opacity: 0.4}
+.c1 { fill:#FF9999; opacity: 0.4}
+.c2 { fill:#FF8080; opacity: 0.4}
+.c3 { fill:#FF6666; opacity: 0.4}
+.c4 { fill:#FF4D4D; opacity: 0.4}
+.c5 { fill:#FF3333; opacity: 0.4}
+.c6 { fill:#FF1919; opacity: 0.4}
+.c7 { fill:#FF0000; opacity: 0.4}
+.c8 { fill:#E60000; opacity: 0.4}
+.c9 { fill:#CC0000; opacity: 0.4}
+
+
+.state:hover{
+	fill-opacity:0.5;
+}
+#tooltip {   
+	position: absolute;           
+	text-align: center;
+	padding: 20px;             
+	margin: 10px;
+	font: 12px sans-serif;        
+	background: lightsteelblue;   
+	border: 1px;      
+	border-radius: 2px;           
+	pointer-events: none;         
+}
+#tooltip h4{
+	margin:0;
+	font-size:14px;
+}
+#tooltip{
+	background:rgba(0,0,0,0.9);
+	border:1px solid grey;
+	border-radius:5px;
+	font-size:12px;
+	width:auto;
+	padding:4px;
+	color:white;
+	opacity:0;
+}
+#tooltip table{
+	table-layout:fixed;
+}
+#tooltip tr td{
+	padding:0;
+	margin:0;
+}
+#tooltip tr td:nth-child(1){
+	width:75px;
+}
+#tooltip tr td:nth-child(2){
+	text-align:center;
+}
+</style>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+</body>
+<div id="tooltip"></div>
+<script src="d3.v3.min.js"></script>
+<script src="queue.v1.min.js"></script>
+<script src="topojson.v1.min.js"></script>
+<script src="d3.geomap.min.js"></script>
+
+<script>
+
+var w = window.innerWidth;
+var h = window.innerHeight;
+console.log(w+" "+h);
+
+var width = w,
+    height = h;
+var projection = d3.geo.albersUsa()
+    .scale(800)
+    .translate([w/4,h/2]);
+var path = d3.geo.path()
+    .projection(projection);
+var rateById = d3.map();
+var quantize = d3.scale.quantize()
+    .domain([0, 1])
+    .range(d3.range(9).map(function(i) { return "c" + i; }));
+
+var devide=function(id){
+	//console.log(id);
+	//return "q" + 5 + "-9";
+
+	if(id < 1000)
+	 return "q" + 0 + "-9";
+	if(id < 3000)
+	 return "q" + 1 + "-9";
+	if(id < 7000)
+	 return "q" + 2 + "-9";
+	if(id < 10000)
+	 return "q" + 3 + "-9";
+	if(id < 15000)
+	 return "q" + 4 + "-9";
+	if(id < 30000)
+	 return "q" + 5 + "-9";
+	if(id < 70000)
+	 return "q" + 6 + "-9";
+};
+
+var map = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+	.attr("class", "map");
+
+
+var scaleX ,scaleY;
+
+var url="http://192.168.100.2:8080/geowave-service-webapp/";
+
+var path1 = d3.geo.path()
+    .projection(cylindrical(width, height));
+
+function cylindrical(width, height) {
+  return d3.geo.projection(function(λ, φ) { return [λ, φ * 2 / width * height]; })
+      //.scale(width / 2 / Math.PI)
+	.scale(150)
+      .translate([width / 4, height/2]);
+}
+
+d3.json("world-50m.json", function(error, world) {
+  if (error) throw error;
+
+  map.append("path")
+      .datum(topojson.feature(world, world.objects.land))
+      .attr("class", "land")
+      .attr("d", path1);
+
+  map.append("path")
+      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "country-border")
+      .attr("d", path1);
+
+  var cord=d3.select(".country-border")[0][0].getBoundingClientRect();
+
+      	scaleX = d3.scale.linear()
+        .domain([-180,180])
+        .range([cord.left,cord.right]);
+
+		scaleY = d3.scale.linear()
+        .domain([-180,180])
+        .range([cord.top,cord.bottom]);
+
+});
+
+/*queue()
+    .defer(d3.json, "us.json")
+    .defer(d3.tsv, "states.tsv")
+    //.defer(d3.json, "http://localhost:8080/geowave-service-webapp-0.8.7-SNAPSHOT/stat/geo/ruks_SPATIAL_VECTOR_IDX")    	
+    .await(ready);
+
+function ready(error, us,data) {//,geo
+return;
+	for (var x in data) {			    
+	    rateById.set(data[x].id, +1);
+	}
+
+	map.append("g")
+      .attr("class", "counties")
+    .selectAll("path")
+      .data(topojson.feature(us, us.objects.counties).features)
+    .enter().append("path")
+      .attr("class", function(d) { return quantize(rateById.get(d.id)); })
+      .attr("d", path);
+
+  map.append("path")
+      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+      .attr("class", "states")
+      .attr("d", path);
+
+var cord=d3.select(".states")[0][0].getBoundingClientRect();
+
+      	scaleX = d3.scale.linear()
+        .domain([-180,180])
+        .range([cord.left,cord.right]);
+
+		scaleY = d3.scale.linear()
+        .domain([-180,180])
+        .range([cord.top,cord.bottom]);
+
+}*/
+
+
+d3.select(self.frameElement).style("height", height + "px");
+
+var svg = d3.select("body").append("div")
+			.attr("width", 720)
+    		.attr("height", 480)
+			.attr("class","statdiv");
+
+var tableDiv =svg.append("div");
+setTableStatView();
+
+
+
+
+
+tableDiv.append("h1").text("Tables");
+var table=tableDiv.append("table");
+
+queue().defer(d3.json, url+"stat/table")
+    	.await(
+    		function(error, tabs){
+    			table.selectAll("tr").data(tabs)
+    					.enter()
+    					.append("tr").append("td").text(
+    							function(d){
+    								return d.tableName;
+    							}
+    						)
+    					.attr('id',function(d){return d.tableName;})
+    					.on("click",
+		    					function(){
+		    						var id=d3.event.target.id;
+		    						//console.log(id);
+		    						showTableStat(id);
+		    					} 
+    						);
+    		}
+    	);
+
+
+function showTableStat(table){
+	queue().defer(d3.json, url+"stat/table")
+    	.await(
+    		function(error, tabs){
+
+    			for (var i = 0; i < tabs.length; i++) {
+    				if(tabs[i].tableName==table)
+    					var tt=tabs[i];
+    			};    			
+
+    			d3.select("#tableName").text(tt.tableName);
+    			d3.select("#state").text(tt.state);
+    			d3.select("#tablets").text(tt.tablets);
+    			d3.select("#offlineTablets").text(tt.offlineTablets);
+    			d3.select("#entries").text(tt.entries);
+    			d3.select("#entriesInMemory").text(tt.entriesInMemory);
+    			d3.select("#ingest").text(tt.ingest);
+    			d3.select("#entriesRead").text(tt.entriesRead);
+    			d3.select("#entriesReturned").text(tt.entriesReturned);
+    			d3.select("#holdTime").html(tt.holdTime);
+				d3.select("#majorunningScans").html(tt.majorunningScans);
+    			d3.select("#minorCompactions").html(tt.minorCompactions);
+    			d3.select("#majorCompactions").html(tt.majorCompactions);
+    		}
+    	);
+
+    queue().defer(d3.json, url+"stat/tablet/"+table).await(
+    		function(error, tabs){
+    				  d3.select("#TableTablets").selectAll("*").remove();
+
+    				  d3.select("#TableTablets")
+						.selectAll("tr")
+						.data(tabs)
+						.enter().append("tr")
+						.html(function(d){return '<input tablet="'+d.tabletUUID+'" table="'+d.table+'" onchange="onTabletCheckboxSelect(this)" type="checkbox" name="'+d.tablet+'" value="'+d.tablet+'" checked>'+
+						'<label tablet="'+d.tabletUUID+'" table="'+d.table+'" for="'+d.tablet+'" onclick="onTabletClick(this)">'+d.tablet+'</label>'});
+    		}
+    	);
+
+    queue().defer(d3.json, url+"stat/geo/"+table)
+		.await(
+		    function(error,geo){
+
+		    	d3.select("body").selectAll("polygon").remove();
+
+		    	if(!geo){
+		    		console.log("Not Support or Not available");
+		    		return;	
+		    	}
+
+		    	for (var i = 0; i < geo.length; i++) {
+
+					var id=table+"___"+geo[i].tablet;
+					map.append("g").selectAll("polygon")
+					    .data([geo[i].points])
+						.enter().append("polygon")
+					    .attr("points",function(d) { 
+					        return d.map(function(d) {
+					            //return [d.x,d.y].join(",");					        	
+					            //return [180+d.x,180+d.y].join(",");
+					            return [scaleX(d.x),scaleY(d.y)].join(",");
+					        }).join(" ");
+					    })
+					    .attr("d", path1)
+					    //.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")	
+					    // .attr("transform", function(d) {console.log(d);
+						 //    return "translate(" + projection([
+						 //      // d.location.longitude,
+						 //      // d.location.latitude
+						 //    ]) + ")";
+						 // })
+					    // .style("fill", "red")
+					    .attr("class", quantize(Math.random()))
+					    // .data(geo[0].geometry.coordinates)
+					    .attr("stroke","black")
+					    .attr("id",id)
+					    .on("mouseover", mouseOver).on("mouseout", mouseOut)
+					    .attr("stroke-width",1)
+					    .style("opacity", 0.4);
+					    // .attr("class", function(d) { return "q" + i + "-9";  });
+
+				};
+		    }
+		);
+	
+}
+
+function onTabletCheckboxSelect(tab){
+	var table=tab.getAttribute("table");	
+	var tablet=tab.getAttribute("tablet");	
+	var tabExid=table+"___"+tablet;
+
+	if(tab.checked){
+		d3.select("#"+tabExid).style("visibility","visible");
+	}else{
+		d3.select("#"+tabExid).style("visibility","hidden");	
+	}
+	
+	console.log(table+" "+tablet);
+}
+
+function onTabletClick(tab){
+	
+	var table=tab.getAttribute("table");	
+	var tablet=tab.getAttribute("tablet");	
+	queue().defer(d3.json, url+"stat/tablet/"+table+"/"+tablet)
+			.await(onTabletStat);
+}
+
+function onTabletStat(error, stat){
+	console.log(stat);
+}
+
+function setTableStatView(){
+	var tableStat = d3.select("body").append("div").attr('id',"tablestat");
+		tableStat.attr("width", 720).attr("height", 480);
+
+	var tab1=tableStat.append("table");
+	var dataset = [ "tableName","state","tablets","offlineTablets","entries","entriesInMemory","ingest","entriesRead","entriesReturned","holdTime","majorunningScans","minorCompactions","majorCompactions","TableTablets" ];
+	
+		dataset.forEach(function(d) {
+				var tr=tab1.append("tr");
+				tr.append("td").text(d);
+				tr.append("td").text("").attr('id',d);
+			}
+		)
+
+}
+
+function toolTip(tab){	/* function to create html content string in tooltip div. */
+	//console.log(d);	
+
+	return "<h4>"+"Tablet "+tab.tablet+"</h4>"+
+		"<table>"+
+		"<tr><td>Table</td><td>"+tab.table+"</td></tr>"+
+		"<tr><td>Entries</td><td>"+tab.entries+"</td></tr>"+
+		"<tr><td>Ingest</td><td>"+tab.ingest+"</td></tr>"+
+		"<tr><td>Query</td><td>"+tab.query+"</td></tr>"+
+		"<tr><td>Minor Avg</td><td>"+tab.miAvg+"</td></tr>"+
+		"<tr><td>Minor Std Dev</td><td>"+tab.mistd+"</td></tr>"+
+		"<tr><td>Minor Avg e/s</td><td>"+tab.miAvges+"</td></tr>"+
+		"<tr><td>Major Avg</td><td>"+tab.maAvg+"</td></tr>"+
+		"<tr><td>Major Std Dev</td><td>"+tab.mastd+"</td></tr>"+
+		"<tr><td>Major Avg e/s</td><td>"+tab.maAvges+"</td></tr>"+
+		"</table>";		
+
+}
+
+function mouseOver(d){
+	
+	var id=d3.event.target.id;
+	d3.select("#tooltip").transition().duration(200)
+		.style("opacity", .9)    
+		.style("left", (d3.event.pageX) + "px")     
+		.style("top", (d3.event.pageY - 28) + "px");
+	
+
+	queue().defer(d3.json, url+"stat/tablet/"+id.split("___")[0]+"/"+id.split("___")[1])
+			.await(readyTab);
+
+	function readyTab(error, tab) { 		
+		d3.select("#tooltip").html(toolTip(tab));	
+	}	
+}
+
+function mouseOut(){
+	d3.select("#tooltip").transition().duration(500).style("opacity", 0);      
+}
+var gg=path;
+</script>

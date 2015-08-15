@@ -106,7 +106,7 @@ public class GeospatialExtent
 				"password",
 				"root",
 				"ruks");
-		String table = "ruks_SPATIAL_VECTOR_IDX";
+		String table = "ruks1_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
 		for (RangeBean bean : splits) {
@@ -150,6 +150,7 @@ public class GeospatialExtent
 			String obscuredExtent;
 			KeyExtent ke;
 			MessageDigest digester;
+			String uuid;
 			try {
 				digester = MessageDigest.getInstance("MD5");
 			}
@@ -174,12 +175,12 @@ public class GeospatialExtent
 							ke.getEndRow().getLength());
 				}
 				obscuredExtent = Base64.encodeBase64String(digester.digest());
-
+				uuid = ke.getUUID().toString();
 				bean = new RangeBean(
 						ke.toDataRange(),
-						obscuredExtent);
+						obscuredExtent,uuid);
 				ranges.add(bean);
-				// uuid = ke.getUUID().toString();
+				// 
 			}
 
 			Text first, last;
@@ -211,10 +212,10 @@ public class GeospatialExtent
 					last);
 
 			obscuredExtent = Base64.encodeBase64String(digester.digest());
-
+			uuid = ke.getUUID().toString();
 			bean = new RangeBean(
 					r,
-					obscuredExtent);
+					obscuredExtent,uuid);
 			ranges.add(bean);
 
 		}

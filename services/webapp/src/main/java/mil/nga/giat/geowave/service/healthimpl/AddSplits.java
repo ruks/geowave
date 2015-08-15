@@ -63,13 +63,16 @@ public class AddSplits
 		SortedSet<Text> keys = new TreeSet<Text>();
 		for (Entry<Key, Value> entry : scan) {
 			Key k = entry.getKey();
-			if (cnt == 300) {
+			if (cnt == 150) {
 				keys.add(k.getRow());
 			}
-			else if (cnt == 600) {
+			else if (cnt == 350) {
 				keys.add(k.getRow());
 			}
-			else if (cnt == 900) {
+			else if (cnt == 550) {
+				keys.add(k.getRow());
+			}
+			else if (cnt == 750) {
 				keys.add(k.getRow());
 			}
 			cnt++;

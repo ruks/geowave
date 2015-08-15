@@ -20,8 +20,7 @@ import mil.nga.giat.geowave.service.jaxbbean.TabletBean;
  * Root resource (exposed at "stat" path)
  */
 @Path("stat")
-public class AccumuloStatistic
-{
+public class AccumuloStatistic {
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
@@ -29,20 +28,20 @@ public class AccumuloStatistic
 	}
 
 	@GET
-	@Path("/geo")
+	@Path("/geo/{table}")
 	@Produces("application/json")
-	public Response geojson() {
+	public Response geojson(@PathParam("table") String table) {
 
 		BackgroundWorker thread = BackgroundWorker.getInstance();
-		List<GeoJson> nodes = thread.getNodes();
 
-		return Response.ok().entity(
-				nodes).header(
-				"Access-Contrl-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		List<GeoJson> nodes = thread.getTableExtent(table);
+
+		return Response
+				.ok()
+				.entity(nodes)
+				.header("Access-Contrl-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 
 	@GET
@@ -57,34 +56,26 @@ public class AccumuloStatistic
 			String user = "root";
 			String pass = "password";
 
-			stat = new TableStats(
-					instanceName,
-					zooServers,
-					user,
-					pass);
-		}
-		catch (Exception e) {
+			stat = new TableStats(instanceName, zooServers, user, pass);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 		List<TableBean> list = stat.getTableStat();
 
-		return Response.ok().entity(
-				list).header(
-				"Access-Control-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		return Response
+				.ok()
+				.entity(list)
+				.header("Access-Control-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 
 	@GET
 	@Path("/tablet/{table}")
 	@Produces("application/json")
-	public Response tablets(
-			@PathParam("table")
-			String table ) {
+	public Response tablets(@PathParam("table") String table) {
 
 		TabletStat stat;
 		try {
@@ -92,36 +83,27 @@ public class AccumuloStatistic
 			String zooServers = "127.0.0.1";
 			String user = "root";
 			String pass = "password";
-			stat = new TabletStat(
-					instanceName,
-					zooServers,
-					user,
-					pass);
-		}
-		catch (Exception e) {
+			stat = new TabletStat(instanceName, zooServers, user, pass);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
 		List<TabletBean> list = stat.getTabletStats(table);
 
-		return Response.ok().entity(
-				list).header(
-				"Access-Control-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		return Response
+				.ok()
+				.entity(list)
+				.header("Access-Control-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 
 	@GET
 	@Path("/tablet/{table}/{tabletId}")
 	@Produces("application/json")
-	public Response tablet(
-			@PathParam("table")
-			String table,
-			@PathParam("tabletId")
-			String tabletId ) {
+	public Response tablet(@PathParam("table") String table,
+			@PathParam("tabletId") String tabletId) {
 
 		TabletStat stat;
 		try {
@@ -129,13 +111,8 @@ public class AccumuloStatistic
 			String zooServers = "127.0.0.1";
 			String user = "root";
 			String pass = "password";
-			stat = new TabletStat(
-					instanceName,
-					zooServers,
-					user,
-					pass);
-		}
-		catch (Exception e) {
+			stat = new TabletStat(instanceName, zooServers, user, pass);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
@@ -143,18 +120,16 @@ public class AccumuloStatistic
 		List<TabletBean> list = stat.getTabletStats(table);
 		TabletBean result = null;
 		for (TabletBean bean : list) {
-			if (bean.getTablet().equals(
-					tabletId)) {
+			if (bean.getTabletUUID().equals(tabletId)) {
 				result = bean;
 			}
 		}
-		return Response.ok().entity(
-				result).header(
-				"Access-Control-Allow-Origin",
-				"*").header(
-				"Access-Control-Allow-Methods",
-				"GET, POST, DELETE, PUT").allow(
-				"OPTIONS").build();
+		return Response
+				.ok()
+				.entity(result)
+				.header("Access-Control-Allow-Origin", "*")
+				.header("Access-Control-Allow-Methods",
+						"GET, POST, DELETE, PUT").allow("OPTIONS").build();
 	}
 
 }

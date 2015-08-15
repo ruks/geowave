@@ -5,28 +5,37 @@ public class TabletBean
 
 	private String table;
 	private String tablet;
-	private long entries;
-	private double ingest;
-	private double query;
-	private double miAvg;
-	private double mistd;
-	private double miAvges;
-	private double maAvg;
-	private double mastd;
-	private double maAvges;
+	private String entries;
+	private String ingest;
+	private String query;
+	private String miAvg;
+	private String mistd;
+	private String miAvges;
+	private String maAvg;
+	private String mastd;
+	private String maAvges;
+	private String tabletUUID;
+
+	public String getTabletUUID() {
+		return tabletUUID;
+	}
+
+	public void setTabletUUID(String tabletUUID) {
+		this.tabletUUID = tabletUUID;
+	}
 
 	public TabletBean(
 			String table,
 			String tablet,
-			long entries,
-			double ingest,
-			double query,
-			double miAvg,
-			double mistd,
-			double miAvges,
-			double maAvg,
-			double mastd,
-			double maAvges ) {
+			String entries,
+			String ingest,
+			String query,
+			String miAvg,
+			String mistd,
+			String miAvges,
+			String maAvg,
+			String mastd,
+			String maAvges,String tabletUUID ) {
 		super();
 		this.table = table;
 		this.tablet = tablet;
@@ -39,6 +48,7 @@ public class TabletBean
 		this.maAvg = maAvg;
 		this.mastd = mastd;
 		this.maAvges = maAvges;
+		this.tabletUUID = tabletUUID;
 	}
 
 	public String getTable() {
@@ -59,85 +69,78 @@ public class TabletBean
 		this.tablet = tablet;
 	}
 
-	public long getEntries() {
+	public String getEntries() {
 		return entries;
 	}
 
-	public void setEntries(
-			long entries ) {
+	public void setEntries(String entries) {
 		this.entries = entries;
 	}
 
-	public double getIngest() {
+	public String getIngest() {
 		return ingest;
 	}
 
-	public void setIngest(
-			double ingest ) {
+	public void setIngest(String ingest) {
 		this.ingest = ingest;
 	}
 
-	public double getQuery() {
+	public String getQuery() {
 		return query;
 	}
 
-	public void setQuery(
-			double query ) {
+	public void setQuery(String query) {
 		this.query = query;
 	}
 
-	public double getMiAvg() {
+	public String getMiAvg() {
 		return miAvg;
 	}
 
-	public void setMiAvg(
-			double miAvg ) {
+	public void setMiAvg(String miAvg) {
 		this.miAvg = miAvg;
 	}
 
-	public double getMistd() {
+	public String getMistd() {
 		return mistd;
 	}
 
-	public void setMistd(
-			double mistd ) {
+	public void setMistd(String mistd) {
 		this.mistd = mistd;
 	}
 
-	public double getMiAvges() {
+	public String getMiAvges() {
 		return miAvges;
 	}
 
-	public void setMiAvges(
-			double miAvges ) {
+	public void setMiAvges(String miAvges) {
 		this.miAvges = miAvges;
 	}
 
-	public double getMaAvg() {
+	public String getMaAvg() {
 		return maAvg;
 	}
 
-	public void setMaAvg(
-			double maAvg ) {
+	public void setMaAvg(String maAvg) {
 		this.maAvg = maAvg;
 	}
 
-	public double getMastd() {
+	public String getMastd() {
 		return mastd;
 	}
 
-	public void setMastd(
-			double mastd ) {
+	public void setMastd(String mastd) {
 		this.mastd = mastd;
 	}
 
-	public double getMaAvges() {
+	public String getMaAvges() {
 		return maAvges;
 	}
 
-	public void setMaAvges(
-			double maAvges ) {
+	public void setMaAvges(String maAvges) {
 		this.maAvges = maAvges;
 	}
+
+	
 
 }
