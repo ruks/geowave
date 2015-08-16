@@ -149,8 +149,8 @@ var path1 = d3.geo.path()
 function cylindrical(width, height) {
   return d3.geo.projection(function(λ, φ) { return [λ, φ * 2 / width * height]; })
       //.scale(width / 2 / Math.PI)
-	.scale(150)
-      .translate([width / 4, height/2]);
+	.scale(width*0.7/Math.PI/2)
+	.translate([width*0.7 / 2, height/2]);
 }
 
 d3.json("world-50m.json", function(error, world) {
@@ -223,20 +223,21 @@ var svg = d3.select("body").append("div")
     		.attr("height", 480)
 			.attr("class","statdiv");
 
-var tableDiv =svg.append("div");
+//var tableDiv =svg.append("div").attr("id","nametablediv");
+
+
+svg.append("h1").text("Tables");
+var tableDiv =svg.append("div").attr("id","nametablediv");
+var table=tableDiv.append("table").attr("id","nametable");
+table.append("tr").append("th").text("List Of Tables");
+
 setTableStatView();
-
-
-
-
-
-tableDiv.append("h1").text("Tables");
-var table=tableDiv.append("table");
 
 queue().defer(d3.json, url+"stat/table")
     	.await(
     		function(error, tabs){
-    			table.selectAll("tr").data(tabs)
+    			table.selectAll("tr")
+    					.data(tabs)
     					.enter()
     					.append("tr").append("td").text(
     							function(d){
@@ -369,16 +370,18 @@ function onTabletStat(error, stat){
 }
 
 function setTableStatView(){
-	var tableStat = d3.select("body").append("div").attr('id',"tablestat");
-		tableStat.attr("width", 720).attr("height", 480);
+	//var tableStat = d3.select("body").append("div").attr('id',"tablestat");
+		<!-- tableStat.attr("width", 720).attr("height", 480); -->
 
-	var tab1=tableStat.append("table");
+	var tableStat = svg.append("div");
+	var tab1=tableStat.append("table").attr('id',"attribtable");
+	tab1.append("tr").append("th").attr("colspan",2).text("Table Statistic");
 	var dataset = [ "tableName","state","tablets","offlineTablets","entries","entriesInMemory","ingest","entriesRead","entriesReturned","holdTime","majorunningScans","minorCompactions","majorCompactions","TableTablets" ];
 	
 		dataset.forEach(function(d) {
 				var tr=tab1.append("tr");
-				tr.append("td").text(d);
-				tr.append("td").text("").attr('id',d);
+				tr.append("td").text(d).attr("width","35%");
+				tr.append("td").text("").attr('id',d).attr("width","65%");
 			}
 		)
 
