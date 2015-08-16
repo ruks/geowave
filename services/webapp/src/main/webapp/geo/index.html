@@ -94,7 +94,6 @@
 <script src="d3.v3.min.js"></script>
 <script src="queue.v1.min.js"></script>
 <script src="topojson.v1.min.js"></script>
-<script src="d3.geomap.min.js"></script>
 
 <script>
 
@@ -142,7 +141,7 @@ var map = d3.select("body").append("svg")
 
 var scaleX ,scaleY;
 
-var url="http://192.168.100.2:8080/geowave-service-webapp/";
+var url="../service/";
 
 var path1 = d3.geo.path()
     .projection(cylindrical(width, height));

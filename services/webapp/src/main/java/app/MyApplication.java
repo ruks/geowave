@@ -44,7 +44,6 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.TracingConfig;
-//import javax.servlet.jsp.JspFactory;
 
 //import org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;
 

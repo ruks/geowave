@@ -1,0 +1,9 @@
+@charset "utf-8";
+.map{
+	width: 50%;
+	float: left;
+}
+.statdiv {
+	width: 50%;
+	float: right;
+}

@@ -1,7 +1,7 @@
 package mil.nga.giat.geowave.service.jaxbbean;
 
-
-public class TableBean {
+public class TableBean
+{
 	private String tableName;
 	private String state;
 	private int tablets;
@@ -20,7 +20,8 @@ public class TableBean {
 		return tableName;
 	}
 
-	public void setTableName(String tableName) {
+	public void setTableName(
+			String tableName ) {
 		this.tableName = tableName;
 	}
 
@@ -28,7 +29,8 @@ public class TableBean {
 		return state;
 	}
 
-	public void setState(String state) {
+	public void setState(
+			String state ) {
 		this.state = state;
 	}
 
@@ -36,7 +38,8 @@ public class TableBean {
 		return tablets;
 	}
 
-	public void setTablets(int tablets) {
+	public void setTablets(
+			int tablets ) {
 		this.tablets = tablets;
 	}
 
@@ -44,7 +47,8 @@ public class TableBean {
 		return offlineTablets;
 	}
 
-	public void setOfflineTablets(int offlineTablets) {
+	public void setOfflineTablets(
+			int offlineTablets ) {
 		this.offlineTablets = offlineTablets;
 	}
 
@@ -52,17 +56,25 @@ public class TableBean {
 		return holdTime;
 	}
 
-	public void setHoldTime(String holdTime) {
+	public void setHoldTime(
+			String holdTime ) {
 		this.holdTime = holdTime;
 	}
 
-	
-
-	public TableBean(String tableName, String state, int tablets,
-			int offlineTablets, String entries, String entriesInMemory,
-			String ingest, String entriesRead, String entriesReturned,
-			String holdTime, String majorunningScans,
-			String minorCompactions, String majorCompactions) {
+	public TableBean(
+			String tableName,
+			String state,
+			int tablets,
+			int offlineTablets,
+			String entries,
+			String entriesInMemory,
+			String ingest,
+			String entriesRead,
+			String entriesReturned,
+			String holdTime,
+			String majorunningScans,
+			String minorCompactions,
+			String majorCompactions ) {
 		super();
 		this.tableName = tableName;
 		this.state = state;
@@ -83,7 +95,8 @@ public class TableBean {
 		return majorunningScans;
 	}
 
-	public void setMajorunningScans(String majorunningScans) {
+	public void setMajorunningScans(
+			String majorunningScans ) {
 		this.majorunningScans = majorunningScans;
 	}
 
@@ -91,7 +104,8 @@ public class TableBean {
 		return minorCompactions;
 	}
 
-	public void setMinorCompactions(String minorCompactions) {
+	public void setMinorCompactions(
+			String minorCompactions ) {
 		this.minorCompactions = minorCompactions;
 	}
 
@@ -99,7 +113,8 @@ public class TableBean {
 		return majorCompactions;
 	}
 
-	public void setMajorCompactions(String majorCompactions) {
+	public void setMajorCompactions(
+			String majorCompactions ) {
 		this.majorCompactions = majorCompactions;
 	}
 
@@ -107,7 +122,8 @@ public class TableBean {
 		return entries;
 	}
 
-	public void setEntries(String entries) {
+	public void setEntries(
+			String entries ) {
 		this.entries = entries;
 	}
 
@@ -115,7 +131,8 @@ public class TableBean {
 		return entriesInMemory;
 	}
 
-	public void setEntriesInMemory(String entriesInMemory) {
+	public void setEntriesInMemory(
+			String entriesInMemory ) {
 		this.entriesInMemory = entriesInMemory;
 	}
 
@@ -123,7 +140,8 @@ public class TableBean {
 		return ingest;
 	}
 
-	public void setIngest(String ingest) {
+	public void setIngest(
+			String ingest ) {
 		this.ingest = ingest;
 	}
 
@@ -131,7 +149,8 @@ public class TableBean {
 		return entriesRead;
 	}
 
-	public void setEntriesRead(String entriesRead) {
+	public void setEntriesRead(
+			String entriesRead ) {
 		this.entriesRead = entriesRead;
 	}
 
@@ -139,7 +158,8 @@ public class TableBean {
 		return entriesReturned;
 	}
 
-	public void setEntriesReturned(String entriesReturned) {
+	public void setEntriesReturned(
+			String entriesReturned ) {
 		this.entriesReturned = entriesReturned;
 	}
 

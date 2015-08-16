@@ -58,7 +58,7 @@ public class GeospatialExtent
 	private String zooServers = "127.0.0.1";
 	private String password = "password";
 	private String user = "root";
-	private String namespace = "ruks";
+	private String namespace = "ruks1";
 	private Connector connector;
 	private Instance accInstance;
 
@@ -105,7 +105,7 @@ public class GeospatialExtent
 				"127.0.0.1",
 				"password",
 				"root",
-				"ruks");
+				"ruks1");
 		String table = "ruks1_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
@@ -178,9 +178,10 @@ public class GeospatialExtent
 				uuid = ke.getUUID().toString();
 				bean = new RangeBean(
 						ke.toDataRange(),
-						obscuredExtent,uuid);
+						obscuredExtent,
+						uuid);
 				ranges.add(bean);
-				// 
+				//
 			}
 
 			Text first, last;
@@ -215,7 +216,8 @@ public class GeospatialExtent
 			uuid = ke.getUUID().toString();
 			bean = new RangeBean(
 					r,
-					obscuredExtent,uuid);
+					obscuredExtent,
+					uuid);
 			ranges.add(bean);
 
 		}
@@ -273,11 +275,15 @@ public class GeospatialExtent
 
 		}
 		catch (TableNotFoundException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 			logger.error(
 					e.getMessage(),
 					e);
-			e.printStackTrace();
+			// e.printStackTrace();
+			return null;
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
 			return null;
 		}
 
@@ -339,11 +345,15 @@ public class GeospatialExtent
 			return points;
 
 		}
-		catch (TableNotFoundException e) { // TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
-			e.printStackTrace();
+		catch (TableNotFoundException | IndexOutOfBoundsException e) { // TODO
+																		// Auto-generated
+																		// catch
+																		// block
+			// logger.error(
+			// e.getMessage(),
+			// e);
+			System.out.println(e.getMessage());
+			// e.printStackTrace();
 			return null;
 		}
 

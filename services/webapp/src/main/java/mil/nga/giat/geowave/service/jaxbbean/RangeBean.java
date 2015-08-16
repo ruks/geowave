@@ -7,21 +7,23 @@ public class RangeBean
 	private Range range;
 	private String tablet;
 	private String tabletUUID;
-	
+
 	public RangeBean(
 			Range range,
-			String tablet,String tabletUUID ) {
+			String tablet,
+			String tabletUUID ) {
 		super();
 		this.range = range;
 		this.tablet = tablet;
-		this.tabletUUID=tabletUUID;
+		this.tabletUUID = tabletUUID;
 	}
 
 	public String getTabletUUID() {
 		return tabletUUID;
 	}
 
-	public void setTabletUUID(String tabletUUID) {
+	public void setTabletUUID(
+			String tabletUUID ) {
 		this.tabletUUID = tabletUUID;
 	}
 

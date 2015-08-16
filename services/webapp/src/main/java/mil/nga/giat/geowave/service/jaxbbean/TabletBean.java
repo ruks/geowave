@@ -20,7 +20,8 @@ public class TabletBean
 		return tabletUUID;
 	}
 
-	public void setTabletUUID(String tabletUUID) {
+	public void setTabletUUID(
+			String tabletUUID ) {
 		this.tabletUUID = tabletUUID;
 	}
 
@@ -35,7 +36,8 @@ public class TabletBean
 			String miAvges,
 			String maAvg,
 			String mastd,
-			String maAvges,String tabletUUID ) {
+			String maAvges,
+			String tabletUUID ) {
 		super();
 		this.table = table;
 		this.tablet = tablet;
@@ -73,7 +75,8 @@ public class TabletBean
 		return entries;
 	}
 
-	public void setEntries(String entries) {
+	public void setEntries(
+			String entries ) {
 		this.entries = entries;
 	}
 
@@ -81,7 +84,8 @@ public class TabletBean
 		return ingest;
 	}
 
-	public void setIngest(String ingest) {
+	public void setIngest(
+			String ingest ) {
 		this.ingest = ingest;
 	}
 
@@ -89,7 +93,8 @@ public class TabletBean
 		return query;
 	}
 
-	public void setQuery(String query) {
+	public void setQuery(
+			String query ) {
 		this.query = query;
 	}
 
@@ -97,7 +102,8 @@ public class TabletBean
 		return miAvg;
 	}
 
-	public void setMiAvg(String miAvg) {
+	public void setMiAvg(
+			String miAvg ) {
 		this.miAvg = miAvg;
 	}
 
@@ -105,7 +111,8 @@ public class TabletBean
 		return mistd;
 	}
 
-	public void setMistd(String mistd) {
+	public void setMistd(
+			String mistd ) {
 		this.mistd = mistd;
 	}
 
@@ -113,7 +120,8 @@ public class TabletBean
 		return miAvges;
 	}
 
-	public void setMiAvges(String miAvges) {
+	public void setMiAvges(
+			String miAvges ) {
 		this.miAvges = miAvges;
 	}
 
@@ -121,7 +129,8 @@ public class TabletBean
 		return maAvg;
 	}
 
-	public void setMaAvg(String maAvg) {
+	public void setMaAvg(
+			String maAvg ) {
 		this.maAvg = maAvg;
 	}
 
@@ -129,7 +138,8 @@ public class TabletBean
 		return mastd;
 	}
 
-	public void setMastd(String mastd) {
+	public void setMastd(
+			String mastd ) {
 		this.mastd = mastd;
 	}
 
@@ -137,10 +147,9 @@ public class TabletBean
 		return maAvges;
 	}
 
-	public void setMaAvges(String maAvges) {
+	public void setMaAvges(
+			String maAvges ) {
 		this.maAvges = maAvges;
 	}
-
-	
 
 }

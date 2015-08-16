@@ -30,24 +30,28 @@
 					<groupId>hsqldb</groupId>
 				</exclusion>
 				<exclusion>
+					<artifactId>jsp-api</artifactId>
+					<groupId>javax.servlet.jsp</groupId>
+				</exclusion>
+				<!-- <exclusion>
+					<artifactId>javax.servlet</artifactId>
+					<groupId>org.glassfish</groupId>
+				</exclusion> -->
+				<exclusion>
 					<artifactId>javax.servlet-api</artifactId>
+					<groupId>javax.servlet</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>servlet-api</artifactId>
 					<groupId>javax.servlet</groupId>
 				</exclusion>
 				<exclusion>
 					<artifactId>servlet-api</artifactId>
 					<groupId>org.mortbay.jetty</groupId>
 				</exclusion>
-				<!-- <exclusion>
-					<artifactId>servlet-api</artifactId>
-					<groupId>javax.servlet</groupId>
-				</exclusion> -->
 				<exclusion>
-					<artifactId>javax.servlet</artifactId>
-					<groupId>org.glassfish</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jsp-api</artifactId>
-					<groupId>javax.servlet.jsp</groupId>
+					<artifactId>jetty-servlet</artifactId>
+					<groupId>org.eclipse.jetty</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -89,11 +93,27 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-service-api</artifactId>
 			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.jersey</groupId>
+					<artifactId>jersey-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sun.jersey</groupId>
+					<artifactId>jersey-server</artifactId>
+				</exclusion>
+				<exclusion>
+					<artifactId>hsqldb</artifactId>
+					<groupId>hsqldb</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet</artifactId>
@@ -102,36 +122,24 @@
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 		</dependency>
+
+
 		<!-- <dependency> <groupId>org.apache.accumulo</groupId> <artifactId>accumulo-core</artifactId> 
 			<version>1.7.0</version> </dependency> <dependency> <groupId>org.apache.accumulo</groupId> 
 			<artifactId>accumulo-monitor</artifactId> <version>1.7.0</version> </dependency> 
 			<dependency> <groupId>org.apache.accumulo</groupId> <artifactId>accumulo-server-base</artifactId> 
 			<version>1.7.0</version> </dependency> <dependency> <groupId>org.apache.accumulo</groupId> 
 			<artifactId>accumulo-trace</artifactId> <version>1.7.0</version> </dependency> -->
-		<dependency>
-			<groupId>mil.nga.giat</groupId>
-			<artifactId>geowave-vector</artifactId>
-			<version>0.8.5</version>
-			<!-- <exclusions>
-				<exclusion>
-					<artifactId>servlet-api</artifactId>
-					<groupId>javax.servlet</groupId>
-				</exclusion>
-			</exclusions> -->
-			<exclusions>
-				<exclusion>
-					<artifactId>servlet-api</artifactId>
-					<groupId>javax.servlet</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+		<!-- <dependency> <groupId>mil.nga.giat</groupId> <artifactId>geowave-vector</artifactId> 
+			<version>0.8.5</version> -->
+		<!-- <exclusions> <exclusion> <artifactId>servlet-api</artifactId> <groupId>javax.servlet</groupId> 
+			</exclusion> </exclusions> -->
+		<!-- <exclusions> <exclusion> <artifactId>servlet-api</artifactId> <groupId>javax.servlet</groupId> 
+			</exclusion> </exclusions> </dependency> -->
 		<!-- <dependency> <groupId>mil.nga.giat</groupId> <artifactId>geowave-example</artifactId> 
 			<version>0.8.7-SNAPSHOT</version> </dependency> -->
-		<!-- <dependency>
-			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-mvc-jsp</artifactId>
-			<version>2.20</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>org.glassfish.jersey.ext</groupId> <artifactId>jersey-mvc-jsp</artifactId> 
+			<version>2.20</version> </dependency> -->
 
 	</dependencies>
 

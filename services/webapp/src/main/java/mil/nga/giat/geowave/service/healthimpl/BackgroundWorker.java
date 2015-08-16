@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -24,6 +26,10 @@ public class BackgroundWorker extends
 	int i;
 	private List<GeoJson> nodes;
 	private Map<String, List<GeoJson>> geoMap = new TreeMap<String, List<GeoJson>>();
+
+	private static final int MAXIMUM_CONCURRENT = 1;
+
+	private ScheduledThreadPoolExecutor executor = null;
 
 	public synchronized static BackgroundWorker getInstance() {
 		if (thread == null) {
@@ -52,35 +58,28 @@ public class BackgroundWorker extends
 			ServletContextEvent sce ) {
 		if ((thread == null) || (!thread.isAlive())) {
 			thread = new BackgroundWorker();
-			thread.start();
+			// thread.start();
 		}
+		executor = new ScheduledThreadPoolExecutor(
+				MAXIMUM_CONCURRENT);
+		Runnable object = thread;
+		executor.scheduleAtFixedRate(
+				object,
+				5,
+				360,
+				TimeUnit.SECONDS);
 	}
 
 	public void contextDestroyed(
 			ServletContextEvent sce ) {
-		try {
-			// thread.doShutdown();
-			thread.interrupt();
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		executor.shutdown();
 	}
 
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		// while (true) {
-		try {
-			 TablesconvexHull();
-			System.out.println("run " + (i++));
-			Thread.sleep(5 * 60 * 000);
-		}
-		catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// }
+		TablesconvexHull();
+		System.out.println("run " + (i++));
 	}
 
 	private void convexHull(
