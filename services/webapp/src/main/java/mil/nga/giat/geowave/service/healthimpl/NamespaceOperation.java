@@ -42,21 +42,14 @@ public class NamespaceOperation
 		return AccumuloUtils.getNamespaces(conn);
 	}
 
-	public String getNamespaceOfTable(
+	public static String getNamespaceOfTable(
 			String table ) {
-		List<String> list = getNamespaces();
-		AccumuloOperations ao;
-		String tns = null;
-		for (String ns : list) {
-			ao = new BasicAccumuloOperations(
-					this.conn,
-					ns);
-			if (ao.tableExists(table)) {
-				tns = ns;
-				break;
-			}
-		}
-		return tns;
+		String ns;
+		int i = table.indexOf('_');
+		ns = table.substring(
+				0,
+				i);
+		return ns;
 	}
 
 	public List<String> getTablesInNamespaces(
@@ -81,11 +74,11 @@ public class NamespaceOperation
 		String zooServers = "127.0.0.1";
 		String user = "root";
 		String pass = "password";
-		NamespaceOperation ns = new NamespaceOperation(
-				instanceName,
-				zooServers,
-				user,
-				pass);
-		System.out.println(ns.getNamespaceOfTable("SPATIAL_VECTOR_IDX"));
+		// NamespaceOperation ns = new NamespaceOperation(
+		// instanceName,
+		// zooServers,
+		// user,
+		// pass);
+		System.out.println(NamespaceOperation.getNamespaceOfTable("ruks_SPATIAL_VECTOR_IDX"));
 	}
 }

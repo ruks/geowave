@@ -21,6 +21,7 @@ import org.apache.hadoop.io.Text;
 
 public class AddSplits
 {
+	static String ns = "namespace";
 
 	public static void main(
 			String[] args )
@@ -46,7 +47,7 @@ public class AddSplits
 		Scanner scan;
 		try {
 			scan = conn.createScanner(
-					"ruks_SPATIAL_VECTOR_IDX",
+					ns + "_SPATIAL_VECTOR_IDX",
 					auths);
 		}
 		catch (TableNotFoundException e1) {
@@ -80,7 +81,7 @@ public class AddSplits
 
 		try {
 			op.addSplits(
-					"ruks_SPATIAL_VECTOR_IDX",
+					ns + "_SPATIAL_VECTOR_IDX",
 					keys);
 		}
 		catch (TableNotFoundException | AccumuloException | AccumuloSecurityException e) {

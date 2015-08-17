@@ -89,8 +89,7 @@ public class BackgroundWorker extends
 				"geowave",
 				"127.0.0.1",
 				"password",
-				"root",
-				"ruks");
+				"root");
 
 		// String table = "ruks_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);

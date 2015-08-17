@@ -58,7 +58,7 @@ public class GeospatialExtent
 	private String zooServers = "127.0.0.1";
 	private String password = "password";
 	private String user = "root";
-	private String namespace = "ruks1";
+	private String namespace;
 	private Connector connector;
 	private Instance accInstance;
 
@@ -66,14 +66,12 @@ public class GeospatialExtent
 			String instanceName,
 			String zooServers,
 			String password,
-			String user,
-			String namespace ) {
+			String user ) {
 		super();
 		this.instanceName = instanceName;
 		this.zooServers = zooServers;
 		this.password = password;
 		this.user = user;
-		this.namespace = namespace;
 
 		this.accInstance = new ZooKeeperInstance(
 				this.instanceName,
@@ -104,8 +102,7 @@ public class GeospatialExtent
 				"geowave",
 				"127.0.0.1",
 				"password",
-				"root",
-				"ruks1");
+				"root");
 		String table = "ruks_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
@@ -314,6 +311,7 @@ public class GeospatialExtent
 				ByteArrayId bid = new ByteArrayId(
 						id.getAdapterId());
 
+				namespace = NamespaceOperation.getNamespaceOfTable(table);
 				AccumuloOperations ao = new BasicAccumuloOperations(
 						this.connector,
 						namespace);

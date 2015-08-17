@@ -3,6 +3,7 @@
 	width: 70%;
 	float: left;
 	border: 1px solid green;
+	
 }
 .statdiv {
 	width: 29%;
@@ -23,6 +24,7 @@
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     width: 100%;    
     border-collapse: collapse;
+    margin-bottom: 10px;
 }
 
 #nametable td, #nametable th {
@@ -39,6 +41,13 @@
     background-color: #A7C942;
     color: #ffffff;
     width: 100%;
+    margin-bottom: 10px;
+}
+
+.subheader{
+	text-align: center;
+	color: #088A08;	
+	width: 100%;
 }
 
 #nsselect{
