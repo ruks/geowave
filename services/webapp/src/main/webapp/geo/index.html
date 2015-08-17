@@ -227,34 +227,58 @@ var svg = d3.select("body").append("div")
 
 
 svg.append("h1").text("Tables");
+var selectHead=svg.append("table").attr("class","tableheader").append("tr");
+selectHead.append("th").text("NameSpace");
+var nsSelect =selectHead.append("th").append("select")
+				.attr("id","nsselect")
+				.attr("onchange", "nsSelectOnChange(this.value)");
+				
+	nsSelect.append("option")
+		.attr("value","all")
+		.text("All table");
+
 var tableDiv =svg.append("div").attr("id","nametablediv");
 var table=tableDiv.append("table").attr("id","nametable");
-table.append("tr").append("th").text("List Of Tables");
-
+	
 setTableStatView();
 
-queue().defer(d3.json, url+"stat/table")
-    	.await(
-    		function(error, tabs){
-    			table.selectAll("tr")
-    					.data(tabs)
-    					.enter()
-    					.append("tr").append("td").text(
-    							function(d){
-    								return d.tableName;
-    							}
-    						)
-    					.attr('id',function(d){return d.tableName;})
-    					.on("click",
-		    					function(){
-		    						var id=d3.event.target.id;
-		    						//console.log(id);
-		    						showTableStat(id);
-		    					} 
-    						);
-    		}
-    	);
+queue().defer(d3.json, url+"stat/listns")
+		.await(
+		function(error,ns){			
+			ns.forEach(
+					function(d){
+						nsSelect.append("option")
+						.attr("value",d)
+						.text(d);
+					}
+			);
+		}
+	);
 
+nsSelectOnChange("all");
+
+function nsSelectOnChange(ns){
+	queue().defer(d3.json, url+"stat/listtable/"+ns)
+	    	.await(
+	    		function(error, tabs){
+	    			
+	    			table.selectAll("tr").remove();
+	    			table.append("tr").append("th").text("List Of Tables");
+	    			tabs.forEach(
+	    				function(d) {
+		    				table.append("tr").append("td").text(d)
+	    						.attr('id',d)
+	    						.on("click",
+			    					function(){
+			    						var id=d3.event.target.id;
+			    						showTableStat(id);
+			    					} 
+	    						);
+						}
+					);	    			
+	    		}
+	    	);
+}
 
 function showTableStat(table){
 	queue().defer(d3.json, url+"stat/table")

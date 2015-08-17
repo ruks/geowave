@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -10,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import mil.nga.giat.geowave.service.healthimpl.BackgroundWorker;
+import mil.nga.giat.geowave.service.healthimpl.NamespaceOperation;
 import mil.nga.giat.geowave.service.healthimpl.TableStats;
 import mil.nga.giat.geowave.service.healthimpl.TabletStat;
 import mil.nga.giat.geowave.service.jaxbbean.GeoJson;
@@ -52,13 +54,13 @@ public class AccumuloStatistic
 	@Path("/table")
 	@Produces("application/json")
 	public Response tables() {
+		String instanceName = "geowave";
+		String zooServers = "127.0.0.1";
+		String user = "root";
+		String pass = "password";
 
 		TableStats stat;
 		try {
-			String instanceName = "geowave";
-			String zooServers = "127.0.0.1";
-			String user = "root";
-			String pass = "password";
 
 			stat = new TableStats(
 					instanceName,
@@ -80,6 +82,106 @@ public class AccumuloStatistic
 				"Access-Control-Allow-Methods",
 				"GET, POST, DELETE, PUT").allow(
 				"OPTIONS").build();
+	}
+
+	@GET
+	@Path("/listtable/{ns}")
+	@Produces("application/json")
+	public Response tables(
+			@PathParam("ns")
+			String ns ) {
+		String instanceName = "geowave";
+		String zooServers = "127.0.0.1";
+		String user = "root";
+		String pass = "password";
+
+		if (ns.equals("all")) {
+
+			TableStats stat;
+			try {
+
+				stat = new TableStats(
+						instanceName,
+						zooServers,
+						user,
+						pass);
+			}
+			catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			List<TableBean> list = stat.getTableStat();
+			List<String> nslist = new ArrayList<String>();
+
+			for (TableBean tableBean : list) {
+				nslist.add(tableBean.getTableName());
+			}
+
+			return Response.ok().entity(
+					nslist).header(
+					"Access-Control-Allow-Origin",
+					"*").header(
+					"Access-Control-Allow-Methods",
+					"GET, POST, DELETE, PUT").allow(
+					"OPTIONS").build();
+		}
+		else {
+
+			List<String> nslist = null;
+			try {
+				NamespaceOperation nst = new NamespaceOperation(
+						instanceName,
+						zooServers,
+						user,
+						pass);
+				nslist = nst.getTablesInNamespaces(ns);
+			}
+			catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return Response.ok().entity(
+					nslist).header(
+					"Access-Control-Allow-Origin",
+					"*").header(
+					"Access-Control-Allow-Methods",
+					"GET, POST, DELETE, PUT").allow(
+					"OPTIONS").build();
+
+		}
+	}
+
+	@GET
+	@Path("/listns")
+	@Produces("application/json")
+	public Response listns() {
+		String instanceName = "geowave";
+		String zooServers = "127.0.0.1";
+		String user = "root";
+		String pass = "password";
+
+		List<String> nslist = null;
+		try {
+			NamespaceOperation nst = new NamespaceOperation(
+					instanceName,
+					zooServers,
+					user,
+					pass);
+			nslist = nst.getNamespaces();
+		}
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return Response.ok().entity(
+				nslist).header(
+				"Access-Control-Allow-Origin",
+				"*").header(
+				"Access-Control-Allow-Methods",
+				"GET, POST, DELETE, PUT").allow(
+				"OPTIONS").build();
+
 	}
 
 	@GET

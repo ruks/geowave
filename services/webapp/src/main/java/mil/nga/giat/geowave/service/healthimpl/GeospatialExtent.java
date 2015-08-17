@@ -106,7 +106,7 @@ public class GeospatialExtent
 				"password",
 				"root",
 				"ruks1");
-		String table = "ruks1_SPATIAL_VECTOR_IDX";
+		String table = "ruks_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
 		for (RangeBean bean : splits) {

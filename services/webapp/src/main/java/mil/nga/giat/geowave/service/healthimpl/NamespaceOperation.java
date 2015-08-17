@@ -1,0 +1,91 @@
+package mil.nga.giat.geowave.service.healthimpl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedSet;
+
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloOperations;
+import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
+import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+
+public class NamespaceOperation
+{
+	private Connector conn;
+
+	public NamespaceOperation(
+			String instanceName,
+			String zooServers,
+			String user,
+			String pass )
+			throws Exception {
+
+		Instance inst = new ZooKeeperInstance(
+				instanceName,
+				zooServers);
+		AuthenticationToken authToken = new PasswordToken(
+				pass);
+		this.conn = inst.getConnector(
+				user,
+				authToken);
+
+	}
+
+	public List<String> getNamespaces() {
+		return AccumuloUtils.getNamespaces(conn);
+	}
+
+	public String getNamespaceOfTable(
+			String table ) {
+		List<String> list = getNamespaces();
+		AccumuloOperations ao;
+		String tns = null;
+		for (String ns : list) {
+			ao = new BasicAccumuloOperations(
+					this.conn,
+					ns);
+			if (ao.tableExists(table)) {
+				tns = ns;
+				break;
+			}
+		}
+		return tns;
+	}
+
+	public List<String> getTablesInNamespaces(
+			String ns )
+			throws AccumuloException,
+			TableNotFoundException {
+		SortedSet<String> li = conn.tableOperations().list();
+		List<String> nsli = new ArrayList<String>();
+
+		for (String st : li) {
+			if (st.startsWith(ns + "_")) {
+				nsli.add(st);
+			}
+		}
+		return nsli;
+	}
+
+	public static void main(
+			String[] args )
+			throws Exception {
+		String instanceName = "geowave";
+		String zooServers = "127.0.0.1";
+		String user = "root";
+		String pass = "password";
+		NamespaceOperation ns = new NamespaceOperation(
+				instanceName,
+				zooServers,
+				user,
+				pass);
+		System.out.println(ns.getNamespaceOfTable("SPATIAL_VECTOR_IDX"));
+	}
+}
