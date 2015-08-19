@@ -10,6 +10,8 @@ import java.util.TreeMap;
 
 import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
@@ -24,10 +26,8 @@ import org.apache.accumulo.core.trace.Tracer;
 import org.apache.accumulo.monitor.Monitor;
 import org.apache.accumulo.monitor.util.celltypes.CompactionsType;
 import org.apache.accumulo.monitor.util.celltypes.DurationType;
-import org.apache.accumulo.monitor.util.celltypes.TableStateType;
 import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
-import org.apache.accumulo.server.tables.TableManager;
 import org.apache.accumulo.server.util.TableInfoUtil;
 
 public class TableStats
@@ -40,17 +40,22 @@ public class TableStats
 			String instanceName,
 			String zooServers,
 			String user,
-			String pass )
-			throws Exception {
+			String pass ) {
 
 		Instance inst = new ZooKeeperInstance(
 				instanceName,
 				zooServers);
 		AuthenticationToken authToken = new PasswordToken(
 				pass);
-		this.conn = inst.getConnector(
-				user,
-				authToken);
+		try {
+			this.conn = inst.getConnector(
+					user,
+					authToken);
+		}
+		catch (AccumuloException | AccumuloSecurityException e1) {
+			// TODO Auto-generated catch block
+			System.out.println(e1.getMessage());
+		}
 
 		MasterClientService.Iface client = null;
 		try {
@@ -64,7 +69,7 @@ public class TableStats
 		}
 		catch (Exception e) {
 			System.out.println(e.getMessage());
-			return;
+			// return;
 		}
 		finally {
 
@@ -145,10 +150,10 @@ public class TableStats
 	public static void main(
 			String[] args )
 			throws Exception {
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		String user = "root";
-		String pass = "password";
+		String instanceName = GeowavePropertyReader.readProperty("instanceName");
+		String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		String user = GeowavePropertyReader.readProperty("user");
+		String pass = GeowavePropertyReader.readProperty("pass");
 
 		TableStats stats = new TableStats(
 				instanceName,

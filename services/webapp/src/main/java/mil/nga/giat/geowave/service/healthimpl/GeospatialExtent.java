@@ -54,10 +54,10 @@ public class GeospatialExtent
 {
 
 	private static final Logger logger = LogManager.getLogger(GeospatialExtent.class);
-	private String instanceName = "geowave";
-	private String zooServers = "127.0.0.1";
-	private String password = "password";
-	private String user = "root";
+	private String instanceName;
+	private String zooServers;
+	private String password;
+	private String user;
 	private String namespace;
 	private Connector connector;
 	private Instance accInstance;
@@ -65,8 +65,8 @@ public class GeospatialExtent
 	public GeospatialExtent(
 			String instanceName,
 			String zooServers,
-			String password,
-			String user ) {
+			String user,
+			String password ) {
 		super();
 		this.instanceName = instanceName;
 		this.zooServers = zooServers;
@@ -77,18 +77,18 @@ public class GeospatialExtent
 				this.instanceName,
 				this.zooServers);
 		AuthenticationToken authToken = new PasswordToken(
-				password);
-
+				this.password);
 		try {
 			connector = accInstance.getConnector(
-					user,
+					this.user,
 					authToken);
 		}
 		catch (AccumuloException | AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
+			// logger.error(
+			// e.getMessage(),
+			// e);
+			System.out.println(e.getMessage());
 		}
 	}
 
@@ -98,12 +98,17 @@ public class GeospatialExtent
 			String[] args )
 			throws Exception {
 
+		String instanceName = GeowavePropertyReader.readProperty("instanceName");
+		String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		String user = GeowavePropertyReader.readProperty("user");
+		String pass = GeowavePropertyReader.readProperty("pass");
+
 		GeospatialExtent ex = new GeospatialExtent(
-				"geowave",
-				"127.0.0.1",
-				"password",
-				"root");
-		String table = "ruks_SPATIAL_VECTOR_IDX";
+				instanceName,
+				zooServers,
+				user,
+				pass);
+		String table = "namespace_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
 		for (RangeBean bean : splits) {
@@ -220,17 +225,19 @@ public class GeospatialExtent
 		}
 		catch (AccumuloException | TableNotFoundException e1) {
 			// TODO Auto-generated catch block
-			logger.error(
-					e1.getMessage(),
-					e1);
-			e1.printStackTrace();
+			// logger.error(
+			// e1.getMessage(),
+			// e1);
+			// e1.printStackTrace();
+			System.out.println(e1.getMessage());
 		}
 		catch (AccumuloSecurityException e) {
 			// TODO Auto-generated catch block
-			logger.error(
-					e.getMessage(),
-					e);
-			e.printStackTrace();
+			// logger.error(
+			// e.getMessage(),
+			// e);
+			// e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 
 		return ranges;
@@ -362,8 +369,14 @@ public class GeospatialExtent
 		ConvexHull c = new ConvexHull(
 				points,
 				new GeometryFactory());
-		Geometry geometry = c.getConvexHull();
-		return geometry;
+		try {
+			Geometry geometry = c.getConvexHull();
+			return geometry;
+		}
+		catch (Exception e) {
+			return null;
+		}
+
 	}
 
 }

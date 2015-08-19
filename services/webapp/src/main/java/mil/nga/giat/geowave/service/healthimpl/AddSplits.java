@@ -27,16 +27,19 @@ public class AddSplits
 			String[] args )
 			throws Exception {
 		// TODO Auto-generated method stub
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
+		String instanceName = GeowavePropertyReader.readProperty("instanceName");
+		String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		String user = GeowavePropertyReader.readProperty("user");
+		String pass = GeowavePropertyReader.readProperty("pass");
+
 		Instance inst = new ZooKeeperInstance(
 				instanceName,
 				zooServers);
 		Connector conn;
 		AuthenticationToken authToken = new PasswordToken(
-				"password");
+				pass);
 		conn = inst.getConnector(
-				"root",
+				user,
 				authToken);
 		addSplits(conn);
 	}

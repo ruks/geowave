@@ -32,6 +32,7 @@ import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 import org.apache.thrift.TException;
 import org.apache.accumulo.core.util.Duration;
+
 import com.google.common.net.HostAndPort;
 
 public class TabletStat
@@ -255,17 +256,17 @@ public class TabletStat
 
 	public static void main(
 			String[] args ) {
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		String user = "root";
-		String pass = "password";
+		String instanceName = GeowavePropertyReader.readProperty("instanceName");
+		String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		String user = GeowavePropertyReader.readProperty("user");
+		String pass = GeowavePropertyReader.readProperty("pass");
 		TabletStat t = new TabletStat(
 				instanceName,
 				zooServers,
 				user,
 				pass);
 		System.out.println(t.getTabletStats(
-				"ruks_SPATIAL_VECTOR_IDX").get(
+				"namespace_SPATIAL_VECTOR_IDX").get(
 				0).getTabletUUID());
 		// System.out.println(t.getTabletStats("!0").get(0).getTable());
 	}

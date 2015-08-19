@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 
-import mil.nga.giat.geowave.datastore.accumulo.AccumuloOperations;
-import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
 
 import org.apache.accumulo.core.client.AccumuloException;
@@ -70,10 +68,11 @@ public class NamespaceOperation
 	public static void main(
 			String[] args )
 			throws Exception {
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		String user = "root";
-		String pass = "password";
+		// String instanceName = GeowavePropertyReader
+		// .readProperty("instanceName");
+		// String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		// String user = GeowavePropertyReader.readProperty("user");
+		// String pass = GeowavePropertyReader.readProperty("pass");
 		// NamespaceOperation ns = new NamespaceOperation(
 		// instanceName,
 		// zooServers,

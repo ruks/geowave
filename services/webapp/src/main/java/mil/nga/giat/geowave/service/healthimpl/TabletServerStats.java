@@ -132,10 +132,10 @@ public class TabletServerStats
 	public static void main(
 			String[] args )
 			throws Exception {
-		String instanceName = "geowave";
-		String zooServers = "127.0.0.1";
-		String user = "root";
-		String pass = "password";
+		String instanceName = GeowavePropertyReader.readProperty("instanceName");
+		String zooServers = GeowavePropertyReader.readProperty("zooServers");
+		String user = GeowavePropertyReader.readProperty("user");
+		String pass = GeowavePropertyReader.readProperty("pass");
 		TabletServerStats stats = new TabletServerStats(
 				instanceName,
 				zooServers,
