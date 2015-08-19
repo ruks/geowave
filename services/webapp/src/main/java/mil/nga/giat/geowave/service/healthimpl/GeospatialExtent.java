@@ -98,10 +98,10 @@ public class GeospatialExtent
 			String[] args )
 			throws Exception {
 
-		String instanceName = GeowavePropertyReader.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
 		GeospatialExtent ex = new GeospatialExtent(
 				instanceName,

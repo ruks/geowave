@@ -18,7 +18,10 @@ import mil.nga.giat.geowave.service.jaxbbean.TableBean;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
-public class BackgroundWorker extends Thread implements ServletContextListener {
+public class BackgroundWorker extends
+		Thread implements
+		ServletContextListener
+{
 	private static BackgroundWorker thread = null;
 	int i;
 	private List<GeoJson> nodes;
@@ -37,7 +40,8 @@ public class BackgroundWorker extends Thread implements ServletContextListener {
 
 	}
 
-	public List<GeoJson> getTableExtent(String table) {
+	public List<GeoJson> getTableExtent(
+			String table ) {
 		return geoMap.get(table);
 	}
 
@@ -45,21 +49,29 @@ public class BackgroundWorker extends Thread implements ServletContextListener {
 		return nodes;
 	}
 
-	public void setNodes(List<GeoJson> nodes) {
+	public void setNodes(
+			List<GeoJson> nodes ) {
 		this.nodes = nodes;
 	}
 
-	public synchronized void contextInitialized(ServletContextEvent sce) {
+	public synchronized void contextInitialized(
+			ServletContextEvent sce ) {
 		if ((thread == null) || (!thread.isAlive())) {
 			thread = new BackgroundWorker();
 			// thread.start();
 		}
-		executor = new ScheduledThreadPoolExecutor(MAXIMUM_CONCURRENT);
+		executor = new ScheduledThreadPoolExecutor(
+				MAXIMUM_CONCURRENT);
 		Runnable object = thread;
-		executor.scheduleAtFixedRate(object, 5, 360, TimeUnit.SECONDS);
+		executor.scheduleAtFixedRate(
+				object,
+				5,
+				360,
+				TimeUnit.SECONDS);
 	}
 
-	public void contextDestroyed(ServletContextEvent sce) {
+	public void contextDestroyed(
+			ServletContextEvent sce ) {
 		executor.shutdown();
 	}
 
@@ -69,61 +81,77 @@ public class BackgroundWorker extends Thread implements ServletContextListener {
 		//
 		try {
 			TablesconvexHull();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// TODO: handle exception
 			System.out.println(e.getMessage());
 		}
 		System.out.println("run " + (i++));
 	}
 
-	private void convexHull(String table) throws Exception {
+	private void convexHull(
+			String table )
+			throws Exception {
 		nodes = new ArrayList<GeoJson>();
 
-		String instanceName = GeowavePropertyReader
-				.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
-		GeospatialExtent ex = new GeospatialExtent(instanceName, zooServers,
-				user, pass);
+		GeospatialExtent ex = new GeospatialExtent(
+				instanceName,
+				zooServers,
+				user,
+				pass);
 
 		// String table = "ruks_SPATIAL_VECTOR_IDX";
 		List<RangeBean> splits = ex.getSplits(table);
 		System.out.println("splits " + splits.size());
 		for (RangeBean bean : splits) {
-			Coordinate[] points = ex.extent(table, bean.getRange());
+			Coordinate[] points = ex.extent(
+					table,
+					bean.getRange());
 			Geometry g = ex.getConvexHull(points);
 			System.out.println(g);
 			Coordinate[] c = g.getCoordinates();
 			List<Points> no = new ArrayList<Points>();
 			for (Coordinate co : c) {
-				no.add(new Points(co.x, co.y));
+				no.add(new Points(
+						co.x,
+						co.y));
 			}
-			nodes.add(new GeoJson(bean.getTabletUUID(), no));
+			nodes.add(new GeoJson(
+					bean.getTabletUUID(),
+					no));
 		}
-		geoMap.put(table, nodes);
+		geoMap.put(
+				table,
+				nodes);
 	}
 
 	private void TablesconvexHull() {
 		TableStats stat;
 
-		String instanceName = GeowavePropertyReader
-				.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
-		stat = new TableStats(instanceName, zooServers, user, pass);
+		stat = new TableStats(
+				instanceName,
+				zooServers,
+				user,
+				pass);
 
 		List<TableBean> list = stat.getTableStat();
 		for (TableBean tableBean : list) {
 			try {
 				convexHull(tableBean.getTableName());
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				// e.printStackTrace();
-				System.out.println("table " + tableBean.getTableName()
-						+ " Not support");
+				System.out.println("table " + tableBean.getTableName() + " Not support");
 			}
 		}
 	}

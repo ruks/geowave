@@ -256,10 +256,10 @@ public class TabletStat
 
 	public static void main(
 			String[] args ) {
-		String instanceName = GeowavePropertyReader.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 		TabletStat t = new TabletStat(
 				instanceName,
 				zooServers,

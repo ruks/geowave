@@ -2,18 +2,16 @@ package mil.nga.giat.geowave.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import javax.servlet.ServletConfig;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import mil.nga.giat.geowave.service.healthimpl.BackgroundWorker;
+import mil.nga.giat.geowave.service.healthimpl.GeowaveConstant;
 import mil.nga.giat.geowave.service.healthimpl.GeowavePropertyReader;
 import mil.nga.giat.geowave.service.healthimpl.NamespaceOperation;
 import mil.nga.giat.geowave.service.healthimpl.TableStats;
@@ -35,8 +33,6 @@ public class AccumuloStatistic
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getIt() {
 		try {
-			String s = GeowavePropertyReader.class.getClassLoader().getResource(
-					"config.properties").getPath();
 			String as = GeowavePropertyReader.readProperty("test");
 			return as;
 		}
@@ -71,10 +67,10 @@ public class AccumuloStatistic
 	@Produces("application/json")
 	public Response tables() {
 
-		String instanceName = GeowavePropertyReader.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
 		TableStats stat;
 		try {
@@ -107,11 +103,10 @@ public class AccumuloStatistic
 	public Response tables(
 			@PathParam("ns")
 			String ns ) {
-		String instanceName = GeowavePropertyReader.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
-
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 		if (ns.equals("all")) {
 
 			TableStats stat;
@@ -173,10 +168,10 @@ public class AccumuloStatistic
 	@Path("/listns")
 	@Produces("application/json")
 	public Response listns() {
-		String instanceName = GeowavePropertyReader.readProperty("instanceName");
-		String zooServers = GeowavePropertyReader.readProperty("zooServers");
-		String user = GeowavePropertyReader.readProperty("user");
-		String pass = GeowavePropertyReader.readProperty("pass");
+		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+		String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+		String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+		String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
 		List<String> nslist = null;
 		try {
@@ -210,10 +205,10 @@ public class AccumuloStatistic
 
 		TabletStat stat;
 		try {
-			String instanceName = GeowavePropertyReader.readProperty("instanceName");
-			String zooServers = GeowavePropertyReader.readProperty("zooServers");
-			String user = GeowavePropertyReader.readProperty("user");
-			String pass = GeowavePropertyReader.readProperty("pass");
+			String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+			String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+			String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+			String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
 			stat = new TabletStat(
 					instanceName,
@@ -248,10 +243,10 @@ public class AccumuloStatistic
 
 		TabletStat stat;
 		try {
-			String instanceName = GeowavePropertyReader.readProperty("instanceName");
-			String zooServers = GeowavePropertyReader.readProperty("zooServers");
-			String user = GeowavePropertyReader.readProperty("user");
-			String pass = GeowavePropertyReader.readProperty("pass");
+			String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
+			String zooServers = GeowavePropertyReader.readProperty(GeowaveConstant.zooServers);
+			String user = GeowavePropertyReader.readProperty(GeowaveConstant.user);
+			String pass = GeowavePropertyReader.readProperty(GeowaveConstant.pass);
 
 			stat = new TabletStat(
 					instanceName,

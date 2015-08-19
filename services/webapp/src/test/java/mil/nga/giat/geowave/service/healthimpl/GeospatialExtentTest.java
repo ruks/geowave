@@ -126,8 +126,8 @@ public class GeospatialExtentTest
 		GeospatialExtent ex = new GeospatialExtent(
 				instanceName,
 				"127.0.0.1:2181",
-				pass,
-				user);
+				user,
+				pass);
 		String testTname = ns + testTnameSuffix;
 		List<RangeBean> splits = ex.getSplits(testTname);
 
