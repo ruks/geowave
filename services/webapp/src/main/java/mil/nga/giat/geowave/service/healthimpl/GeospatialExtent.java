@@ -62,6 +62,17 @@ public class GeospatialExtent
 	private Connector connector;
 	private Instance accInstance;
 
+	/**
+	 * 
+	 * @param instanceName
+	 *            Geowave instance name
+	 * @param zooServers
+	 *            Zooserver Host name
+	 * @param user
+	 *            username for Geowave instance
+	 * @param password
+	 *            password for Geowave instance
+	 */
 	public GeospatialExtent(
 			String instanceName,
 			String zooServers,
@@ -73,11 +84,14 @@ public class GeospatialExtent
 		this.password = password;
 		this.user = user;
 
+		// create zookeeper instance
 		this.accInstance = new ZooKeeperInstance(
 				this.instanceName,
 				this.zooServers);
 		AuthenticationToken authToken = new PasswordToken(
 				this.password);
+
+		// Getting connector from instance
 		try {
 			connector = accInstance.getConnector(
 					this.user,
@@ -94,6 +108,12 @@ public class GeospatialExtent
 
 	// private final static String table = "ruks_SPATIAL_VECTOR_IDX";
 
+	/**
+	 * Testing main method
+	 * 
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(
 			String[] args )
 			throws Exception {
@@ -120,15 +140,25 @@ public class GeospatialExtent
 		}
 	}
 
+	/**
+	 * Getting ranges for table's tablets
+	 * 
+	 * @param table
+	 *            Tablename
+	 * @return list of tablet information including ranges
+	 */
 	public List<RangeBean> getSplits(
 			String table ) {
+		// taking the table operation form the connector
 		TableOperations op = this.connector.tableOperations();
 
+		// getting tablet id from table name
 		String tableid = op.tableIdMap().get(
 				table);
 		ArrayList<RangeBean> ranges = new ArrayList<RangeBean>();
 
 		try {
+			// get the split points of the table
 			List<Text> list = new ArrayList<Text>(
 					op.listSplits(table));
 
@@ -162,12 +192,17 @@ public class GeospatialExtent
 				return null;
 			}
 
+			// iterate through the split points
 			for (int i = 0; i < list.size(); i++) {
+
+				// getting tabletLocation class
 				tt = tl.locateTablet(
 						ctx,
 						list.get(i),
 						false,
 						false);
+
+				// getting extent of each tablet
 				ke = tt.tablet_extent;
 
 				if (ke.getEndRow() != null && ke.getEndRow().getLength() > 0) {
@@ -176,8 +211,11 @@ public class GeospatialExtent
 							0,
 							ke.getEndRow().getLength());
 				}
+				// getting tablet name
 				obscuredExtent = Base64.encodeBase64String(digester.digest());
-				uuid = ke.getUUID().toString();
+				uuid = ke.getUUID().toString(); // getting tablet uuid
+
+				// create RangeBean object to hold tablet information
 				bean = new RangeBean(
 						ke.toDataRange(),
 						obscuredExtent,
@@ -186,16 +224,21 @@ public class GeospatialExtent
 				//
 			}
 
+			// calculate seperatly for last tablet
 			Text first, last;
 
 			Key[] kk;
-			if (list.isEmpty()) {
+			if (list.isEmpty()) {// if table contain one tablet
+
+				// get the first and last rows
 				kk = this.read(
 						null,
 						null,
 						table);
 			}
 			else {
+
+				// get the first and last rows of last tablet
 				kk = this.read(
 						list.get(list.size() - 1),
 						null,
@@ -204,23 +247,27 @@ public class GeospatialExtent
 			first = kk[0].getRow();
 			last = kk[1].getRow();
 
+			// getting tablet location
 			tt = tl.locateTablet(
 					ctx,
 					first,
 					false,
 					false);
+
+			// get tablet range and create Range class
 			ke = tt.tablet_extent;
 			Range r = new Range(
 					first,
 					last);
 
+			// getting name
 			obscuredExtent = Base64.encodeBase64String(digester.digest());
-			uuid = ke.getUUID().toString();
+			uuid = ke.getUUID().toString(); // getting tablet uuid
 			bean = new RangeBean(
 					r,
 					obscuredExtent,
 					uuid);
-			ranges.add(bean);
+			ranges.add(bean); // adding tablet info to list
 
 		}
 		catch (AccumuloException | TableNotFoundException e1) {
@@ -240,9 +287,20 @@ public class GeospatialExtent
 			System.out.println(e.getMessage());
 		}
 
-		return ranges;
+		return ranges; // return tablet ranges
 	}
 
+	/**
+	 * find the first and last rows of each table using table split points
+	 * 
+	 * @param start
+	 *            starting split point
+	 * @param end
+	 *            ending split point
+	 * @param table
+	 *            table name
+	 * @return return first and last tablet row
+	 */
 	private Key[] read(
 			Text start,
 			Text end,
@@ -250,13 +308,18 @@ public class GeospatialExtent
 
 		try {
 
+			// create Scanner to read rows
 			Authorizations auths = new Authorizations();
 			Scanner scan = this.connector.createScanner(
 					table,
 					auths);
+
+			// set the Range to the Scanner
 			scan.setRange(new Range(
 					start,
 					end));
+
+			// setting iterator to read data as a row
 			IteratorSetting itSettings = new IteratorSetting(
 					1,
 					WholeRowIterator.class);
@@ -265,13 +328,15 @@ public class GeospatialExtent
 			int j = 0;
 			Key first = null, last;
 			Key k = null;
+
+			// iterate through the list of rows
 			for (Entry<Key, Value> entry : scan) {
 				k = entry.getKey();
 				if (j++ == 1) {
-					first = k;
+					first = k; // take second row as next tablet starting point
 				}
 			}
-			last = k;
+			last = k; // last row as last point
 			return new Key[] {
 				first,
 				last
@@ -293,6 +358,15 @@ public class GeospatialExtent
 
 	}
 
+	/**
+	 * Find the extent of a tablet using it's range
+	 * 
+	 * @param table
+	 *            name of the table
+	 * @param range
+	 *            range of the table
+	 * @return list of coordinate representing extent
+	 */
 	public Coordinate[] extent(
 			String table,
 			Range range ) {
@@ -302,21 +376,27 @@ public class GeospatialExtent
 		try {
 
 			Authorizations auths = new Authorizations();
+			// creating scanner to read
 			Scanner scan = this.connector.createScanner(
 					table,
 					auths);
+
+			// set the scanner range to table range
 			scan.setRange(range);
 			IteratorSetting itSettings = new IteratorSetting(
 					1,
 					WholeRowIterator.class);
 			scan.addScanIterator(itSettings);
 
+			// list to hold table features
 			ArrayList<SimpleFeatureImpl> list = new ArrayList<SimpleFeatureImpl>();
+
+			// iterate through each rows to find feature
 			for (Entry<Key, Value> entry : scan) {
 				AccumuloRowId id = new AccumuloRowId(
-						entry.getKey());
+						entry.getKey());// getting AccumuloRowId using key
 				ByteArrayId bid = new ByteArrayId(
-						id.getAdapterId());
+						id.getAdapterId()); // getting bytearray id
 
 				namespace = NamespaceOperation.getNamespaceOfTable(table);
 				AccumuloOperations ao = new BasicAccumuloOperations(
@@ -326,6 +406,7 @@ public class GeospatialExtent
 						ao);
 				DataAdapter<?> adapter = a.getAdapter(bid);
 
+				// getting features for the table
 				Object o = AccumuloUtils.decodeRow(
 						entry.getKey(),
 						entry.getValue(),
@@ -333,11 +414,12 @@ public class GeospatialExtent
 						index);
 
 				SimpleFeatureImpl pa = (SimpleFeatureImpl) o;
-				list.add(pa);
+				list.add(pa); // add to list
 
 			}
 
 			Coordinate[] points = new Coordinate[list.size()];
+			// extract coordinates from feature
 			for (int i = 0; i < list.size(); i++) {
 				SimpleFeatureImpl si = list.get(i);
 				double x = (double) si.getAttribute("Latitude");
@@ -364,13 +446,21 @@ public class GeospatialExtent
 
 	}
 
+	/**
+	 * Find ConvexHull of the extent
+	 * 
+	 * @param points
+	 *            list of points representing tablet extent
+	 * @return list of points representing convexHull
+	 */
 	public Geometry getConvexHull(
 			Coordinate[] points ) {
 		ConvexHull c = new ConvexHull(
 				points,
-				new GeometryFactory());
+				new GeometryFactory());// creating convexHull object
 		try {
-			Geometry geometry = c.getConvexHull();
+			Geometry geometry = c.getConvexHull(); // get the geometry
+													// representing convexHull
 			return geometry;
 		}
 		catch (Exception e) {

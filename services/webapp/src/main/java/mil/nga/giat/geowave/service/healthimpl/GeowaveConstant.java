@@ -1,5 +1,11 @@
 package mil.nga.giat.geowave.service.healthimpl;
 
+/**
+ * Provide the Project related constant
+ * 
+ * @author rukshan
+ * 
+ */
 public class GeowaveConstant
 {
 	final public static String instanceName = "instanceName";

@@ -30,24 +30,40 @@ import org.apache.accumulo.server.AccumuloServerContext;
 import org.apache.accumulo.server.conf.ServerConfigurationFactory;
 import org.apache.accumulo.server.util.TableInfoUtil;
 
+/**
+ * Class to find the statistic data of a table
+ * 
+ * @author rukshan
+ * 
+ */
 public class TableStats
 {
 	private MasterMonitorInfo masterMonitorInfo = null;
 	private List<TableBean> tableStats;
 	private Connector conn;
 
+	/**
+	 * TableStats constructor
+	 * 
+	 * @param instanceName
+	 * @param zooServers
+	 * @param user
+	 * @param pass
+	 */
 	public TableStats(
 			String instanceName,
 			String zooServers,
 			String user,
 			String pass ) {
 
+		// create zookeeper instance
 		Instance inst = new ZooKeeperInstance(
 				instanceName,
 				zooServers);
 		AuthenticationToken authToken = new PasswordToken(
 				pass);
 		try {
+			// getting the connection from the instance
 			this.conn = inst.getConnector(
 					user,
 					authToken);
@@ -59,10 +75,12 @@ public class TableStats
 
 		MasterClientService.Iface client = null;
 		try {
+			// getting contx
 			AccumuloServerContext context = new AccumuloServerContext(
 					new ServerConfigurationFactory(
 							inst));
 			client = MasterClient.getConnectionWithRetry(context);
+			// getting masterMonitorInfo
 			masterMonitorInfo = client.getMasterStats(
 					Tracer.traceInfo(),
 					context.rpcCreds());
@@ -96,11 +114,16 @@ public class TableStats
 		String minorCompactions;
 		String majorCompactions;
 
+		// getting table operation
 		TableOperations t = conn.tableOperations();
+		// getting reverser table to id map
 		Map<String, String> idm = reverseMap(t.tableIdMap());
+
+		// getting table stats
 		Map<String, Double> compactingByTable = TableInfoUtil.summarizeTableStats(Monitor.getMmi());
 		// TableManager tableManager = TableManager.getInstance();
 
+		// iterate through all the tableinfo
 		for (Entry<String, TableInfo> entry : map.entrySet()) {
 			TableInfo info = entry.getValue();
 
@@ -108,26 +131,49 @@ public class TableStats
 			// state = new TableStateType().format(tableManager
 			// .getTableState(entry.getKey()));
 			state = "ONLINE";
-			tablets = info.getTablets();
-			offlineTablets = info.getTablets() - info.getOnlineTablets();
-			entries = bigNumberForQuantity(info.getRecs());
-			entriesInMemory = bigNumberForQuantity(info.getRecsInMemory());
-			ingest = bigNumberForQuantity(info.getIngestRate());
-			entriesRead = bigNumberForQuantity(info.getScanRate());
-			entriesReturned = bigNumberForQuantity(info.getQueryRate());
+			tablets = info.getTablets(); // set the no of tablets
+			offlineTablets = info.getTablets() - info.getOnlineTablets();// set
+																			// the
+																			// offline
+																			// tablets
+			entries = bigNumberForQuantity(info.getRecs()); // format and set no
+															// of entries
+			entriesInMemory = bigNumberForQuantity(info.getRecsInMemory()); // format
+																			// and
+																			// set
+																			// no
+																			// of
+																			// entries
+																			// in
+																			// memory
+			ingest = bigNumberForQuantity(info.getIngestRate()); // set the
+																	// ingest
+																	// rate and
+																	// format
+			entriesRead = bigNumberForQuantity(info.getScanRate()); // set the
+																	// scane
+																	// rate and
+																	// format
+			entriesReturned = bigNumberForQuantity(info.getQueryRate()); // set
+																			// and
+																			// format
+																			// the
+																			// return
+																			// entries
 			Double hTime = compactingByTable.get(entry.getKey());
 			if (hTime == null) hTime = new Double(
 					0.);
 			holdTime = new DurationType(
 					0l,
-					0l).format(hTime.longValue());
+					0l).format(hTime.longValue()); // set and format hold time
 			majorunningScans = new CompactionsType(
-					"scans").format(info);
+					"scans").format(info); // set the scans
 			minorCompactions = new CompactionsType(
-					"minor").format(info);
+					"minor").format(info); // set the minor
 			majorCompactions = new CompactionsType(
-					"major").format(info);
+					"major").format(info); // set the majors
 
+			// adding all the data to object
 			tableStats.add(new TableBean(
 					tableName,
 					state,
@@ -147,6 +193,12 @@ public class TableStats
 		return tableStats;
 	}
 
+	/**
+	 * Test method
+	 * 
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(
 			String[] args )
 			throws Exception {
@@ -171,14 +223,22 @@ public class TableStats
 
 	}
 
+	/**
+	 * reverse map
+	 * 
+	 * @param map
+	 * @return reversed map
+	 */
 	public Map<String, String> reverseMap(
 			Map<String, String> map ) {
-		Map<String, String> idm = new TreeMap<String, String>();
+		Map<String, String> idm = new TreeMap<String, String>(); // create new
+																	// map
 		for (Entry<String, String> entry : map.entrySet()) {
 			String v = entry.getValue();
 			idm.put(
 					v,
-					entry.getKey());
+					entry.getKey()); // interchange key and value, and add to
+										// map
 		}
 		return idm;
 	}

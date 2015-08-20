@@ -7,6 +7,13 @@ import java.util.Properties;
 public class GeowavePropertyReader
 {
 
+	/**
+	 * Class to read properties
+	 * 
+	 * @param prob
+	 *            property
+	 * @return value of the property
+	 */
 	public static String readProperty(
 			String prob ) {
 		Properties prop = new Properties();
@@ -14,6 +21,7 @@ public class GeowavePropertyReader
 		String value = null;
 		try {
 
+			// load the property file
 			input = GeowavePropertyReader.class.getClassLoader().getResourceAsStream(
 					GeowaveConstant.propFile);
 

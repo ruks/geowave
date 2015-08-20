@@ -35,6 +35,12 @@ import org.apache.accumulo.core.util.Duration;
 
 import com.google.common.net.HostAndPort;
 
+/**
+ * Class to fetch tablet related stat data
+ * 
+ * @author rukshan
+ * 
+ */
 public class TabletStat
 {
 
@@ -49,6 +55,14 @@ public class TabletStat
 	String pass;
 	TableOperations ops;
 
+	/**
+	 * Constructor which create instance
+	 * 
+	 * @param instanceName
+	 * @param zooServers
+	 * @param user
+	 * @param pass
+	 */
 	public TabletStat(
 			String instanceName,
 			String zooServers,
@@ -60,6 +74,7 @@ public class TabletStat
 		this.user = user;
 		this.pass = pass;
 
+		// getting the instance
 		Instance inst = new ZooKeeperInstance(
 				instanceName,
 				zooServers);
@@ -70,9 +85,11 @@ public class TabletStat
 
 		Connector connector;
 		try {
+			// get the connector
 			connector = accInstance.getConnector(
 					user,
 					authToken);
+			// get the tableOperation
 			ops = connector.tableOperations();
 		}
 		catch (AccumuloException | AccumuloSecurityException e) {
@@ -82,6 +99,7 @@ public class TabletStat
 		}
 
 		ClientConfiguration clientConf = ClientConfiguration.loadDefault();
+		// get the client context
 		ctx = new ClientContext(
 				accInstance,
 				new Credentials(
@@ -99,6 +117,14 @@ public class TabletStat
 
 	}
 
+	/**
+	 * method to find standard deviation
+	 * 
+	 * @param elapsed
+	 * @param num
+	 * @param sumDev
+	 * @return
+	 */
 	private static double stddev(
 			double elapsed,
 			double num,
@@ -110,6 +136,12 @@ public class TabletStat
 		return 0;
 	}
 
+	/**
+	 * find the tablet stat data
+	 * 
+	 * @param tableName
+	 * @return
+	 */
 	public List<TabletBean> getTabletStats(
 			String tableName ) {
 
@@ -127,15 +159,18 @@ public class TabletStat
 		String tabletUUID;
 
 		List<TabletBean> stat = new ArrayList<TabletBean>();
+
+		// get the table id of the table name
 		String tid = ops.tableIdMap().get(
 				tableName);
 
 		try {
-
+			// getting the tablet server infomation
 			List<TabletStats> tsStats = new ArrayList<TabletStats>();
 
 			TabletServerStats stats;
 			try {
+				// create tabletServerStats instance
 				stats = new TabletServerStats(
 						this.instanceName,
 						this.zooServers,
@@ -148,26 +183,34 @@ public class TabletStat
 				return null;
 			}
 
+			// getting tablet server stats
 			List<TabletServerBean> sta = stats.getTabletStats();
 			TabletClientService.Client client;
 
+			// iterate over all the tablet server info
 			for (TabletServerBean ts : sta) {
 
+				// find the address of the tablet server
 				address = HostAndPort.fromString(ts.getName());
 
+				// create client to get tablet stat
 				client = ThriftUtil.getClient(
 						new TabletClientService.Client.Factory(),
 						address,
 						ctx);
 
+				// getting tablet stats of the tablet in tablet server
 				List<TabletStats> tss = client.getTabletStats(
 						Tracer.traceInfo(),
 						context.rpcCreds(),
 						tid);
-				tsStats.addAll(tss);
+				tsStats.addAll(tss); // adding all the tablet stat to list
 			}
 
+			// getting table map
 			Map<String, String> tcon = ops.tableIdMap();
+
+			// get the table name form the table id
 			for (Entry<String, String> entry : tcon.entrySet()) {
 				String row = entry.getValue();
 				if (tid.equals(row)) {
@@ -176,16 +219,19 @@ public class TabletStat
 				}
 			}
 
+			// iterate over tablet info
 			for (TabletStats info : tsStats) {
 
 				if (info.extent == null) {
 					continue;
 				}
 
+				// get the tablet key extent
 				KeyExtent extent = new KeyExtent(
 						info.extent);
-				tabletUUID = extent.getUUID().toString();
+				tabletUUID = extent.getUUID().toString(); // get the tablet uuid
 
+				// find the tablet name
 				MessageDigest digester = MessageDigest.getInstance("MD5");
 				if (extent.getEndRow() != null && extent.getEndRow().getLength() > 0) {
 					digester.update(
@@ -195,26 +241,69 @@ public class TabletStat
 				}
 				String obscuredExtent = Base64.encodeBase64String(digester.digest());
 
-				table = tableName;
-				tablet = obscuredExtent;
+				table = tableName; // set the table name
+				tablet = obscuredExtent; // set the tablet name
 
-				entries = new NumberType<Long>().format(info.numEntries);
-				ingest = new NumberType<Long>().format(info.ingestRate);
-				query = new NumberType<Long>().format(info.queryRate);
+				entries = new NumberType<Long>().format(info.numEntries); // set
+																			// and
+																			// format
+																			// entries
+																			// of
+																			// the
+																			// tablet
+				ingest = new NumberType<Long>().format(info.ingestRate); // set
+																			// and
+																			// format
+																			// ingest
+																			// rate
+																			// of
+																			// the
+																			// tablet
+				query = new NumberType<Long>().format(info.queryRate); // set
+																		// and
+																		// format
+																		// query
+																		// rate
+																		// of
+																		// the
+																		// tablet
 
-				miAvg = new SecondType().format(info.minors.num != 0 ? info.minors.elapsed / info.minors.num : null);
+				miAvg = new SecondType().format(info.minors.num != 0 ? info.minors.elapsed / info.minors.num : null);// find
+																														// and
+																														// set
+																														// the
+																														// minor
+																														// average
 				mistd = new SecondType().format(stddev(
 						info.minors.elapsed,
 						info.minors.num,
-						info.minors.sumDev));
-				miAvges = new NumberType<Double>().format(info.minors.elapsed != 0 ? info.minors.count / info.minors.elapsed : null);
-				maAvg = new SecondType().format(info.majors.num != 0 ? info.majors.elapsed / info.majors.num : null);
+						info.minors.sumDev)); // find and set the minor std
+				miAvges = new NumberType<Double>().format(info.minors.elapsed != 0 ? info.minors.count / info.minors.elapsed : null); // find
+																																		// and
+																																		// set
+																																		// the
+																																		// minor
+																																		// average
+																																		// e/s
+				maAvg = new SecondType().format(info.majors.num != 0 ? info.majors.elapsed / info.majors.num : null); // find
+																														// and
+																														// set
+																														// the
+																														// major
+																														// average
 				mastd = new SecondType().format(stddev(
 						info.majors.elapsed,
 						info.majors.num,
-						info.majors.sumDev));
-				maAvges = new NumberType<Double>().format(info.majors.elapsed != 0 ? info.majors.count / info.majors.elapsed : null);
+						info.majors.sumDev)); // find and set the major std
+				maAvges = new NumberType<Double>().format(info.majors.elapsed != 0 ? info.majors.count / info.majors.elapsed : null); // find
+																																		// and
+																																		// set
+																																		// the
+																																		// major
+																																		// average
+																																		// e/s
 
+				// add the table info to the object
 				stat.add(new TabletBean(
 						table,
 						tablet,
@@ -240,6 +329,12 @@ public class TabletStat
 		return stat;
 	}
 
+	/**
+	 * class to format numeric typess
+	 * 
+	 * @author rukshan
+	 * 
+	 */
 	static class SecondType extends
 			NumberType<Double>
 	{
@@ -254,6 +349,11 @@ public class TabletStat
 		}
 	}
 
+	/**
+	 * Test method
+	 * 
+	 * @param args
+	 */
 	public static void main(
 			String[] args ) {
 		String instanceName = GeowavePropertyReader.readProperty(GeowaveConstant.instanceName);
